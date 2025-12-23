@@ -26,6 +26,8 @@ go build -o touta cmd/touta/main.go
 
 # Make it available globally (optional)
 sudo mv touta /usr/local/bin/
+# Or to the user bin directory
+mv touta ~/go/bin/
 ```
 
 ### Create Your First Project

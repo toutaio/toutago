@@ -103,6 +103,24 @@ func initProject(dir string) error {
 		}
 	}
 
+	// Initialize Go module if go.mod doesn't exist
+	goModPath := filepath.Join(dir, "go.mod")
+	if _, err := os.Stat(goModPath); os.IsNotExist(err) {
+		projectName := filepath.Base(dir)
+		cmd := exec.Command("go", "mod", "init", projectName)
+		cmd.Dir = dir
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("failed to initialize go module: %w\nOutput: %s", err, output)
+		}
+
+		// Add chi router dependency (the only external dependency needed for basic projects)
+		cmd = exec.Command("go", "get", "github.com/go-chi/chi/v5@latest")
+		cmd.Dir = dir
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("failed to add chi dependency: %w\nOutput: %s", err, output)
+		}
+	}
+
 	configPath := filepath.Join(dir, "touta.yaml")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		config := `framework:
@@ -128,14 +146,12 @@ router:
 		handler := `package handlers
 
 import (
-	"context"
-	"github.com/toutaio/toutago/pkg/touta"
+	"net/http"
 )
 
-type HelloHandler struct{}
-
-func (h *HelloHandler) Handle(ctx context.Context, msg touta.Message) (touta.Message, error) {
-	return nil, nil
+func Hello(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write([]byte("<h1>Hello from Toutā!</h1>"))
 }
 `
 		if err := os.WriteFile(handlerPath, []byte(handler), 0644); err != nil {
@@ -148,39 +164,32 @@ func (h *HelloHandler) Handle(ctx context.Context, msg touta.Message) (touta.Mes
 		main := `package main
 
 import (
-	"context"
 	"fmt"
 	"log"
+	"net/http"
 
-	"github.com/toutaio/toutago/internal/config"
-	"github.com/toutaio/toutago/internal/di"
-	"github.com/toutaio/toutago/internal/message"
-	"github.com/toutaio/toutago/internal/router"
-	"github.com/toutaio/toutago/pkg/touta"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
-	cfg, err := config.LoadOrDefault("touta.yaml")
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
-	}
+	r := chi.NewRouter()
+	
+	// Middleware
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
-	container := di.NewContainer()
-	bus := message.NewBus()
-	if err := bus.Start(context.Background()); err != nil {
-		log.Fatalf("Failed to start message bus: %v", err)
-	}
-
-	r := router.NewChiRouter(container)
-
-	r.GET("/", func(ctx touta.Context) error {
-		return ctx.HTML(200, "<h1>Welcome to Toutā!</h1>")
+	// Routes
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("<h1>Welcome to Toutā!</h1>"))
 	})
 
-	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-	fmt.Printf("🚀 Toutā server starting on http://%s\n", addr)
+	addr := "localhost:8080"
+	fmt.Printf("🚀 Server starting on http://%s\n", addr)
 	
-	if err := r.Listen(addr); err != nil {
+	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatalf("Server error: %v", err)
 	}
 }
