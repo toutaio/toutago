@@ -43,12 +43,65 @@ go run main.go
 
 The server will start on `http://localhost:8080`.
 
+### Using Docker (Recommended)
+
+Docker provides a consistent development environment across all platforms.
+
+#### Framework Development with Docker
+
+```bash
+# Clone the repository
+git clone https://github.com/toutaio/toutago
+cd toutago
+
+# Start the development environment
+docker-compose up
+
+# The server will start with hot-reload enabled on http://localhost:8080
+```
+
+#### Creating Projects with Docker
+
+```bash
+# Create a new project
+touta new my-app
+cd my-app
+
+# Start with Docker
+docker-compose up
+
+# The server starts on http://localhost:8080 with hot-reload
+```
+
+#### Docker Commands Reference
+
+```bash
+# Start services
+docker-compose up
+
+# Start in detached mode
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Rebuild after dependency changes
+docker-compose up --build
+```
+
 ## Project Structure
 
 ```
 my-app/
 ├── touta.yaml          # Configuration file
 ├── main.go             # Application entry point
+├── Dockerfile          # Docker image configuration
+├── docker-compose.yml  # Docker development setup
+├── .dockerignore       # Docker build exclusions
+├── .air.toml           # Hot-reload configuration
 ├── handlers/           # Message handlers
 │   └── hello.go
 ├── templates/          # HTML templates
@@ -156,6 +209,45 @@ touta serve [--port 8080] [--host localhost]
 
 # Show version
 touta version
+```
+
+## Troubleshooting
+
+### Docker Issues
+
+#### Port Already in Use
+```bash
+# Find and kill the process using port 8080
+lsof -ti:8080 | xargs kill -9
+
+# Or change the port in docker-compose.yml
+ports:
+  - "3000:8080"  # Use port 3000 instead
+```
+
+#### Permission Errors on Linux
+```bash
+# Add your user to the docker group
+sudo usermod -aG docker $USER
+
+# Log out and back in for changes to take effect
+```
+
+#### Changes Not Hot-Reloading
+```bash
+# Ensure volumes are correctly mounted
+docker-compose down
+docker-compose up --build
+
+# Check that .air.toml is present in the project
+```
+
+#### Container Build Fails
+```bash
+# Clear Docker cache and rebuild
+docker-compose down
+docker system prune -f
+docker-compose up --build
 ```
 
 ## Testing

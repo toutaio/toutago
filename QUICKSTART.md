@@ -2,6 +2,26 @@
 
 ## Installation & Setup
 
+### Option 1: With Docker (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/toutaio/toutago
+cd toutago
+
+# Start development environment
+docker-compose up
+
+# Create new project
+touta new my-app
+cd my-app
+
+# Start project with Docker
+docker-compose up
+```
+
+### Option 2: Local Installation
+
 ```bash
 # Clone and build
 git clone https://github.com/toutaio/toutago
@@ -11,7 +31,6 @@ go build -o touta cmd/touta/main.go
 # Create new project
 ./touta new my-app
 cd my-app
-go mod init my-app
 go mod tidy
 go run main.go
 ```
@@ -169,7 +188,7 @@ renderer.Execute("home", data, w)
 ## CLI Commands
 
 ```bash
-# Create new project
+# Create new project (includes Docker files)
 touta new <name>
 
 # Initialize in existing directory
@@ -177,6 +196,13 @@ touta init
 
 # Start development server
 touta serve [--port 8080] [--host localhost]
+
+# Docker commands for development
+docker-compose up              # Start with hot-reload
+docker-compose up -d           # Start in background
+docker-compose logs -f         # View logs
+docker-compose down            # Stop services
+docker-compose up --build      # Rebuild and start
 
 # Show version
 touta version
@@ -188,6 +214,10 @@ touta version
 my-app/
 ├── touta.yaml          # Configuration
 ├── main.go             # Entry point
+├── Dockerfile          # Docker image
+├── docker-compose.yml  # Docker development
+├── .dockerignore       # Docker exclusions
+├── .air.toml           # Hot-reload config
 ├── handlers/           # Message handlers
 ├── templates/          # HTML templates
 ├── static/             # Static assets

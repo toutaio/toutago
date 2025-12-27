@@ -70,6 +70,166 @@ func VersionCommand(version string) *cobra.Command {
 	return cmd
 }
 
+// createDockerFiles creates Docker configuration files for a new project.
+func createDockerFiles(dir string) error {
+	// Dockerfile for project
+	dockerfile := `# Build stage
+FROM golang:1.21-alpine AS builder
+
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
+
+# Development stage
+FROM golang:1.21-alpine AS development
+
+RUN apk add --no-cache git \
+    && go install github.com/cosmtrek/air@v1.49.0
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+EXPOSE 8080
+
+CMD ["air"]
+
+# Production stage
+FROM alpine:latest AS production
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+COPY --from=builder /app/app .
+
+EXPOSE 8080
+
+CMD ["./app"]
+`
+	dockerfilePath := filepath.Join(dir, "Dockerfile")
+	if err := os.WriteFile(dockerfilePath, []byte(dockerfile), 0644); err != nil {
+		return fmt.Errorf("failed to create Dockerfile: %w", err)
+	}
+
+	// docker-compose.yml for project
+	dockerCompose := `version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: development
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+    environment:
+      - TOUTA_ENV=development
+      - TOUTA_PORT=8080
+      - TOUTA_HOST=0.0.0.0
+    working_dir: /app
+    command: air
+    restart: unless-stopped
+
+volumes:
+  go-modules:
+`
+	dockerComposePath := filepath.Join(dir, "docker-compose.yml")
+	if err := os.WriteFile(dockerComposePath, []byte(dockerCompose), 0644); err != nil {
+		return fmt.Errorf("failed to create docker-compose.yml: %w", err)
+	}
+
+	// .dockerignore for project
+	dockerIgnore := `# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+README.md
+
+# IDE
+.vscode
+.idea
+
+# Test files
+*_test.go
+
+# Build artifacts
+*.exe
+app
+bin/
+
+# Dependencies
+vendor/
+
+# Temp files
+tmp/
+*.log
+
+# OS files
+.DS_Store
+`
+	dockerIgnorePath := filepath.Join(dir, ".dockerignore")
+	if err := os.WriteFile(dockerIgnorePath, []byte(dockerIgnore), 0644); err != nil {
+		return fmt.Errorf("failed to create .dockerignore: %w", err)
+	}
+
+	// .air.toml for hot-reload
+	airToml := `root = "."
+tmp_dir = "tmp"
+
+[build]
+  bin = "./tmp/main"
+  cmd = "go build -o ./tmp/main ."
+  delay = 1000
+  exclude_dir = ["assets", "tmp", "vendor"]
+  exclude_file = []
+  exclude_regex = ["_test.go"]
+  exclude_unchanged = false
+  follow_symlink = false
+  include_dir = []
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  kill_delay = "0s"
+  log = "build-errors.log"
+  send_interrupt = false
+  stop_on_error = true
+
+[color]
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  time = false
+
+[misc]
+  clean_on_exit = false
+
+[screen]
+  clear_on_rebuild = false
+`
+	airTomlPath := filepath.Join(dir, ".air.toml")
+	if err := os.WriteFile(airTomlPath, []byte(airToml), 0644); err != nil {
+		return fmt.Errorf("failed to create .air.toml: %w", err)
+	}
+
+	return nil
+}
+
 // createProject scaffolds a new project.
 func createProject(name string) error {
 	if err := os.MkdirAll(name, 0755); err != nil {
@@ -83,6 +243,9 @@ func createProject(name string) error {
 	fmt.Printf("✓ Created new Toutā project: %s\n", name)
 	fmt.Printf("\nNext steps:\n")
 	fmt.Printf("  cd %s\n", name)
+	fmt.Printf("\n  # Option 1: Run with Docker (recommended)\n")
+	fmt.Printf("  docker-compose up\n")
+	fmt.Printf("\n  # Option 2: Run locally\n")
 	fmt.Printf("  touta serve\n")
 
 	return nil
@@ -197,6 +360,11 @@ func main() {
 		if err := os.WriteFile(mainPath, []byte(main), 0644); err != nil {
 			return fmt.Errorf("failed to create main.go: %w", err)
 		}
+	}
+
+	// Create Docker files
+	if err := createDockerFiles(dir); err != nil {
+		return err
 	}
 
 	fmt.Printf("✓ Initialized Toutā project in %s\n", dir)
