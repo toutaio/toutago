@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git make
@@ -17,7 +17,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o touta ./cmd/touta
 
 # Development stage with hot-reload
-FROM golang:1.21-alpine AS development
+FROM golang:1.25-alpine AS development
 
 # Install air for hot-reload and other dev tools (v1.49.0 is compatible with Go 1.21)
 RUN apk add --no-cache git make \
