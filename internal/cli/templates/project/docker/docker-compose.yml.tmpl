@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: development
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+    environment:
+      - TOUTA_ENV=development
+      - TOUTA_PORT=8080
+      - TOUTA_HOST=0.0.0.0
+    working_dir: /app
+    command: air
+    restart: unless-stopped
+
+volumes:
+  go-modules:

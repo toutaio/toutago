@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/toutaio/toutago/internal/cli/templates"
 )
 
 // NewCommand creates a new project.
@@ -70,166 +71,6 @@ func VersionCommand(version string) *cobra.Command {
 	return cmd
 }
 
-// createDockerFiles creates Docker configuration files for a new project.
-func createDockerFiles(dir string) error {
-	// Dockerfile for project
-	dockerfile := `# Build stage
-FROM golang:1.21-alpine AS builder
-
-RUN apk add --no-cache git
-
-WORKDIR /app
-
-COPY go.mod go.sum ./
-RUN go mod download
-
-COPY . .
-
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
-
-# Development stage
-FROM golang:1.21-alpine AS development
-
-RUN apk add --no-cache git \
-    && go install github.com/cosmtrek/air@v1.49.0
-
-WORKDIR /app
-
-COPY go.mod go.sum ./
-RUN go mod download
-
-EXPOSE 8080
-
-CMD ["air"]
-
-# Production stage
-FROM alpine:latest AS production
-
-RUN apk --no-cache add ca-certificates
-
-WORKDIR /root/
-
-COPY --from=builder /app/app .
-
-EXPOSE 8080
-
-CMD ["./app"]
-`
-	dockerfilePath := filepath.Join(dir, "Dockerfile")
-	if err := os.WriteFile(dockerfilePath, []byte(dockerfile), 0644); err != nil {
-		return fmt.Errorf("failed to create Dockerfile: %w", err)
-	}
-
-	// docker-compose.yml for project
-	dockerCompose := `version: '3.8'
-
-services:
-  app:
-    build:
-      context: .
-      target: development
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    volumes:
-      - .:/app
-      - go-modules:/go/pkg/mod
-    environment:
-      - TOUTA_ENV=development
-      - TOUTA_PORT=8080
-      - TOUTA_HOST=0.0.0.0
-    working_dir: /app
-    command: air
-    restart: unless-stopped
-
-volumes:
-  go-modules:
-`
-	dockerComposePath := filepath.Join(dir, "docker-compose.yml")
-	if err := os.WriteFile(dockerComposePath, []byte(dockerCompose), 0644); err != nil {
-		return fmt.Errorf("failed to create docker-compose.yml: %w", err)
-	}
-
-	// .dockerignore for project
-	dockerIgnore := `# Git
-.git
-.gitignore
-
-# Documentation
-*.md
-README.md
-
-# IDE
-.vscode
-.idea
-
-# Test files
-*_test.go
-
-# Build artifacts
-*.exe
-app
-bin/
-
-# Dependencies
-vendor/
-
-# Temp files
-tmp/
-*.log
-
-# OS files
-.DS_Store
-`
-	dockerIgnorePath := filepath.Join(dir, ".dockerignore")
-	if err := os.WriteFile(dockerIgnorePath, []byte(dockerIgnore), 0644); err != nil {
-		return fmt.Errorf("failed to create .dockerignore: %w", err)
-	}
-
-	// .air.toml for hot-reload
-	airToml := `root = "."
-tmp_dir = "tmp"
-
-[build]
-  bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main ."
-  delay = 1000
-  exclude_dir = ["assets", "tmp", "vendor"]
-  exclude_file = []
-  exclude_regex = ["_test.go"]
-  exclude_unchanged = false
-  follow_symlink = false
-  include_dir = []
-  include_ext = ["go", "tpl", "tmpl", "html"]
-  kill_delay = "0s"
-  log = "build-errors.log"
-  send_interrupt = false
-  stop_on_error = true
-
-[color]
-  app = ""
-  build = "yellow"
-  main = "magenta"
-  runner = "green"
-  watcher = "cyan"
-
-[log]
-  time = false
-
-[misc]
-  clean_on_exit = false
-
-[screen]
-  clear_on_rebuild = false
-`
-	airTomlPath := filepath.Join(dir, ".air.toml")
-	if err := os.WriteFile(airTomlPath, []byte(airToml), 0644); err != nil {
-		return fmt.Errorf("failed to create .air.toml: %w", err)
-	}
-
-	return nil
-}
-
 // createProject scaffolds a new project.
 func createProject(name string) error {
 	if err := os.MkdirAll(name, 0755); err != nil {
@@ -253,6 +94,7 @@ func createProject(name string) error {
 
 // initProject initializes Toutā in a directory.
 func initProject(dir string) error {
+	// Create directory structure
 	dirs := []string{
 		filepath.Join(dir, "handlers"),
 		filepath.Join(dir, "templates"),
@@ -266,7 +108,22 @@ func initProject(dir string) error {
 		}
 	}
 
-	// Initialize Go module if go.mod doesn't exist
+	// Initialize Go module if needed
+	if err := initGoModule(dir); err != nil {
+		return err
+	}
+
+	// Create project files from templates
+	if err := createProjectFiles(dir); err != nil {
+		return err
+	}
+
+	fmt.Printf("✓ Initialized Toutā project in %s\n", dir)
+	return nil
+}
+
+// initGoModule initializes a Go module if go.mod doesn't exist
+func initGoModule(dir string) error {
 	goModPath := filepath.Join(dir, "go.mod")
 	if _, err := os.Stat(goModPath); os.IsNotExist(err) {
 		projectName := filepath.Base(dir)
@@ -276,98 +133,40 @@ func initProject(dir string) error {
 			return fmt.Errorf("failed to initialize go module: %w\nOutput: %s", err, output)
 		}
 
-		// Add chi router dependency (the only external dependency needed for basic projects)
+		// Add chi router dependency
 		cmd = exec.Command("go", "get", "github.com/go-chi/chi/v5@latest")
 		cmd.Dir = dir
 		if output, err := cmd.CombinedOutput(); err != nil {
 			return fmt.Errorf("failed to add chi dependency: %w\nOutput: %s", err, output)
 		}
 	}
-
-	configPath := filepath.Join(dir, "touta.yaml")
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		config := `framework:
-  mode: development
-  debug: true
-  hot_reload: true
-  log_level: info
-
-server:
-  host: localhost
-  port: 8080
-
-router:
-  base_path: /
-`
-		if err := os.WriteFile(configPath, []byte(config), 0644); err != nil {
-			return fmt.Errorf("failed to create touta.yaml: %w", err)
-		}
-	}
-
-	handlerPath := filepath.Join(dir, "handlers", "hello.go")
-	if _, err := os.Stat(handlerPath); os.IsNotExist(err) {
-		handler := `package handlers
-
-import (
-	"net/http"
-)
-
-func Hello(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte("<h1>Hello from Toutā!</h1>"))
+	return nil
 }
-`
-		if err := os.WriteFile(handlerPath, []byte(handler), 0644); err != nil {
-			return fmt.Errorf("failed to create example handler: %w", err)
+
+// createProjectFiles creates all project files from templates
+func createProjectFiles(dir string) error {
+	loader := templates.NewProjectTemplateLoader()
+
+	// Map of template to destination file
+	files := map[string]string{
+		templates.TemplateDockerfile:     filepath.Join(dir, "Dockerfile"),
+		templates.TemplateDockerCompose:  filepath.Join(dir, "docker-compose.yml"),
+		templates.TemplateDockerIgnore:   filepath.Join(dir, ".dockerignore"),
+		templates.TemplateAirConfig:      filepath.Join(dir, ".air.toml"),
+		templates.TemplateToutaConfig:    filepath.Join(dir, "touta.yaml"),
+		templates.TemplateMainGo:         filepath.Join(dir, "main.go"),
+		templates.TemplateHelloHandler:   filepath.Join(dir, "handlers", "hello.go"),
+	}
+
+	for templatePath, destPath := range files {
+		// Only create if file doesn't exist
+		if _, err := os.Stat(destPath); os.IsNotExist(err) {
+			if err := loader.WriteTemplate(templatePath, destPath); err != nil {
+				return fmt.Errorf("failed to create %s: %w", destPath, err)
+			}
 		}
 	}
 
-	mainPath := filepath.Join(dir, "main.go")
-	if _, err := os.Stat(mainPath); os.IsNotExist(err) {
-		main := `package main
-
-import (
-	"fmt"
-	"log"
-	"net/http"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-)
-
-func main() {
-	r := chi.NewRouter()
-	
-	// Middleware
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-
-	// Routes
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("<h1>Welcome to Toutā!</h1>"))
-	})
-
-	addr := "localhost:8080"
-	fmt.Printf("🚀 Server starting on http://%s\n", addr)
-	
-	if err := http.ListenAndServe(addr, r); err != nil {
-		log.Fatalf("Server error: %v", err)
-	}
-}
-`
-		if err := os.WriteFile(mainPath, []byte(main), 0644); err != nil {
-			return fmt.Errorf("failed to create main.go: %w", err)
-		}
-	}
-
-	// Create Docker files
-	if err := createDockerFiles(dir); err != nil {
-		return err
-	}
-
-	fmt.Printf("✓ Initialized Toutā project in %s\n", dir)
 	return nil
 }
 
