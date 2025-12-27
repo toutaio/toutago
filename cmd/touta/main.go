@@ -17,8 +17,7 @@ func main() {
 		Long: `Toutā is a Go web framework that emphasizes:
   - Interface-first design for pluggability
   - Message-passing architecture
-  - Dependency injection
-  - Developer experience with hot reload`,
+  - Dependency injection`,
 		Version: version,
 	}
 
@@ -27,6 +26,8 @@ func main() {
 	root.AddCommand(cli.InitCommand())
 	root.AddCommand(cli.ServeCommand())
 	root.AddCommand(cli.VersionCommand(version))
+
+	// TODO: Dynamically load additional commands from plugins
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
