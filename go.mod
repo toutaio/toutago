@@ -1,11 +1,12 @@
 module github.com/toutaio/toutago
 
-go 1.22
+go 1.22.9
 
 require (
 	github.com/adrg/frontmatter v0.2.0
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/spf13/cobra v1.10.2
+	github.com/toutaio/toutago-scela-bus v0.1.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -31,3 +32,5 @@ replace github.com/toutaio/toutago-fith-renderer => /home/nestor/Proyects/touta-
 replace github.com/toutaio/toutago-datamapper => /home/nestor/Proyects/touta-for-go/toutago-datamapper
 
 replace github.com/toutaio/toutago-sil-migrator => /home/nestor/Proyects/touta-for-go/toutago-sil-migrator
+
+replace github.com/toutaio/toutago-scela-bus => /home/nestor/Proyects/touta-for-go/toutago-scela-bus
