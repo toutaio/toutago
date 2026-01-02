@@ -11,7 +11,7 @@ A message-driven Go web framework emphasizing interface-first design, dependency
 ✅ **Template Engine** - Powered by [toutago-fith-renderer](https://github.com/toutaio/toutago-fith-renderer) with Jinja2-style syntax  
 ✅ **Data Mapping** - Powered by [toutago-datamapper](https://github.com/toutaio/toutago-datamapper) with pluggable database adapters  
 ✅ **Database Migrations** - Powered by [toutago-sil-migrator](https://github.com/toutaio/toutago-sil-migrator)  
-✅ **Message Bus** - Pub/sub system for message-based communication  
+✅ **Message Bus** - Powered by [toutago-scela-bus](https://github.com/toutaio/toutago-scela-bus) for in-process pub/sub messaging  
 ✅ **Configuration System** - YAML frontmatter loader with environment variable support  
 ✅ **CLI Framework** - Cobra-based ogam (commands) for project scaffolding and development  
 ✅ **Component Registry** - Nemeton (package) manifest parsing and component registration  
@@ -26,14 +26,14 @@ Toutā v2.0 has been refactored to use specialized, production-ready component l
 │                                                 │
 │  ┌──────────────────────────────────────────┐  │
 │  │    Integration Layer (Adapters)          │  │
-│  └───┬──────┬──────┬─────────┬──────────────┘  │
-│      │      │      │         │                  │
-└──────┼──────┼──────┼─────────┼──────────────────┘
-       │      │      │         │
-   ┌───┴──┐ ┌─┴───┐ ┌┴─────┐  ┌┴──────────┐
-   │ nasc │ │cosan│ │ fith │  │datamapper │
-   │  DI  │ │HTTP │ │Tmpl  │  │  + sil    │
-   └──────┘ └─────┘ └──────┘  └───────────┘
+│  └───┬──────┬──────┬─────────┬──────┬───────┘  │
+│      │      │      │         │      │           │
+└──────┼──────┼──────┼─────────┼──────┼───────────┘
+       │      │      │         │      │
+   ┌───┴──┐ ┌─┴───┐ ┌┴─────┐  ┌┴──┐  ┌┴─────┐
+   │ nasc │ │cosan│ │ fith │  │data│  │scela │
+   │  DI  │ │HTTP │ │Tmpl  │  │+sil│  │ Bus  │
+   └──────┘ └─────┘ └──────┘  └────┘  └──────┘
 ```
 
 ### Why This Architecture?
@@ -53,6 +53,7 @@ Toutā v2.0 has been refactored to use specialized, production-ready component l
 | **fith** | Template engine (Jinja2-style) | [toutago-fith-renderer](https://github.com/toutaio/toutago-fith-renderer) |
 | **datamapper** | Database abstraction layer | [toutago-datamapper](https://github.com/toutaio/toutago-datamapper) |
 | **sil** | Database migration tool | [toutago-sil-migrator](https://github.com/toutaio/toutago-sil-migrator) |
+| **scela** | In-process message bus | [toutago-scela-bus](https://github.com/toutaio/toutago-scela-bus) |
 
 ## Quick Start
 
