@@ -149,13 +149,13 @@ func createProjectFiles(dir string) error {
 
 	// Map of template to destination file
 	files := map[string]string{
-		templates.TemplateDockerfile:     filepath.Join(dir, "Dockerfile"),
-		templates.TemplateDockerCompose:  filepath.Join(dir, "docker-compose.yml"),
-		templates.TemplateDockerIgnore:   filepath.Join(dir, ".dockerignore"),
-		templates.TemplateAirConfig:      filepath.Join(dir, ".air.toml"),
-		templates.TemplateToutaConfig:    filepath.Join(dir, "touta.yaml"),
-		templates.TemplateMainGo:         filepath.Join(dir, "main.go"),
-		templates.TemplateHelloHandler:   filepath.Join(dir, "handlers", "hello.go"),
+		templates.TemplateDockerfile:    filepath.Join(dir, "Dockerfile"),
+		templates.TemplateDockerCompose: filepath.Join(dir, "docker-compose.yml"),
+		templates.TemplateDockerIgnore:  filepath.Join(dir, ".dockerignore"),
+		templates.TemplateAirConfig:     filepath.Join(dir, ".air.toml"),
+		templates.TemplateToutaConfig:   filepath.Join(dir, "touta.yaml"),
+		templates.TemplateMainGo:        filepath.Join(dir, "main.go"),
+		templates.TemplateHelloHandler:  filepath.Join(dir, "handlers", "hello.go"),
 	}
 
 	for templatePath, destPath := range files {

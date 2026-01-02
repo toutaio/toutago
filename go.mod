@@ -1,6 +1,6 @@
 module github.com/toutaio/toutago
 
-go 1.21.5
+go 1.22
 
 require (
 	github.com/adrg/frontmatter v0.2.0

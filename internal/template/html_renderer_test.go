@@ -9,7 +9,7 @@ import (
 
 func TestHTMLRenderer_Parse(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	// Create test template
 	templatePath := filepath.Join(tmpDir, "test.html")
 	content := `<h1>{{.Title}}</h1>`
@@ -27,7 +27,7 @@ func TestHTMLRenderer_Parse(t *testing.T) {
 
 func TestHTMLRenderer_Render(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	// Create test template
 	templatePath := filepath.Join(tmpDir, "test.html")
 	content := `<h1>{{.Title}}</h1>`
@@ -60,7 +60,7 @@ func TestHTMLRenderer_RenderWithoutTemplates(t *testing.T) {
 
 func TestHTMLRenderer_RegisterFunction(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	templatePath := filepath.Join(tmpDir, "test.html")
 	content := `{{upper .Name}}`
 	os.WriteFile(templatePath, []byte(content), 0644)
@@ -85,7 +85,7 @@ func TestHTMLRenderer_RegisterFunction(t *testing.T) {
 
 func TestHTMLRenderer_Execute(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	templatePath := filepath.Join(tmpDir, "test.html")
 	content := `<h1>{{.Title}}</h1>`
 	os.WriteFile(templatePath, []byte(content), 0644)
@@ -95,7 +95,7 @@ func TestHTMLRenderer_Execute(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	data := map[string]string{"Title": "Test"}
-	
+
 	err := renderer.Execute("test.html", data, w)
 	if err != nil {
 		t.Fatalf("Execute failed: %v", err)

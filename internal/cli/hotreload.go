@@ -90,7 +90,7 @@ func (hr *HotReload) stopProcess() {
 // watchFiles monitors file changes
 func (hr *HotReload) watchFiles() {
 	lastMod := make(map[string]time.Time)
-	
+
 	// Get initial file states
 	filepath.Walk(hr.ProjectPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -107,7 +107,7 @@ func (hr *HotReload) watchFiles() {
 
 	for range ticker.C {
 		changed := false
-		
+
 		filepath.Walk(hr.ProjectPath, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return nil
@@ -150,9 +150,9 @@ func (hr *HotReload) shouldWatch(path string) bool {
 	}
 
 	// Skip tmp and vendor directories
-	if filepath.Base(filepath.Dir(path)) == "tmp" || 
-	   filepath.Base(filepath.Dir(path)) == "vendor" ||
-	   filepath.Base(filepath.Dir(path)) == ".git" {
+	if filepath.Base(filepath.Dir(path)) == "tmp" ||
+		filepath.Base(filepath.Dir(path)) == "vendor" ||
+		filepath.Base(filepath.Dir(path)) == ".git" {
 		return false
 	}
 

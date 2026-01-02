@@ -215,31 +215,31 @@ type Config struct {
 
 // FrameworkConfig contains core framework settings.
 type FrameworkConfig struct {
-	Mode        string `yaml:"mode"`         // development, production
-	Debug       bool   `yaml:"debug"`        // enable debug logging
-	HotReload   bool   `yaml:"hot_reload"`   // enable hot reload in dev
-	LogLevel    string `yaml:"log_level"`    // trace, debug, info, warn, error
-	Timezone    string `yaml:"timezone"`     // default timezone
+	Mode      string `yaml:"mode"`       // development, production
+	Debug     bool   `yaml:"debug"`      // enable debug logging
+	HotReload bool   `yaml:"hot_reload"` // enable hot reload in dev
+	LogLevel  string `yaml:"log_level"`  // trace, debug, info, warn, error
+	Timezone  string `yaml:"timezone"`   // default timezone
 }
 
 // RouterConfig contains HTTP router settings.
 type RouterConfig struct {
-	BasePath     string            `yaml:"base_path"`     // base URL path
-	Middleware   []string          `yaml:"middleware"`    // global middleware
-	CORS         CORSConfig        `yaml:"cors"`          // CORS settings
-	RateLimit    RateLimitConfig   `yaml:"rate_limit"`    // rate limiting
-	Static       []StaticConfig    `yaml:"static"`        // static file serving
+	BasePath   string          `yaml:"base_path"`  // base URL path
+	Middleware []string        `yaml:"middleware"` // global middleware
+	CORS       CORSConfig      `yaml:"cors"`       // CORS settings
+	RateLimit  RateLimitConfig `yaml:"rate_limit"` // rate limiting
+	Static     []StaticConfig  `yaml:"static"`     // static file serving
 }
 
 // ServerConfig contains HTTP server settings.
 type ServerConfig struct {
-	Host            string `yaml:"host"`              // bind host
-	Port            int    `yaml:"port"`              // bind port
-	ReadTimeout     int    `yaml:"read_timeout"`      // seconds
-	WriteTimeout    int    `yaml:"write_timeout"`     // seconds
-	IdleTimeout     int    `yaml:"idle_timeout"`      // seconds
-	MaxHeaderBytes  int    `yaml:"max_header_bytes"`  // bytes
-	TLS             TLSConfig `yaml:"tls"`            // TLS settings
+	Host           string    `yaml:"host"`             // bind host
+	Port           int       `yaml:"port"`             // bind port
+	ReadTimeout    int       `yaml:"read_timeout"`     // seconds
+	WriteTimeout   int       `yaml:"write_timeout"`    // seconds
+	IdleTimeout    int       `yaml:"idle_timeout"`     // seconds
+	MaxHeaderBytes int       `yaml:"max_header_bytes"` // bytes
+	TLS            TLSConfig `yaml:"tls"`              // TLS settings
 }
 
 // CORSConfig contains CORS settings.
@@ -262,8 +262,8 @@ type RateLimitConfig struct {
 
 // StaticConfig defines static file serving.
 type StaticConfig struct {
-	Path   string `yaml:"path"`   // URL path
-	Dir    string `yaml:"dir"`    // filesystem directory
+	Path   string `yaml:"path"`    // URL path
+	Dir    string `yaml:"dir"`     // filesystem directory
 	MaxAge int    `yaml:"max_age"` // cache max age in seconds
 }
 
@@ -299,15 +299,15 @@ type TemplateRenderer interface {
 
 // Component represents a registered package component.
 type Component struct {
-	Name        string                 `yaml:"name"`
-	Version     string                 `yaml:"version"`
-	Type        string                 `yaml:"type"` // package, recipe, component
-	Path        string                 `yaml:"path"`
-	Handlers    []string               `yaml:"handlers"`
-	Templates   []string               `yaml:"templates"`
-	Routes      []string               `yaml:"routes"`
-	Assets      []string               `yaml:"assets"`
-	Metadata    map[string]interface{} `yaml:"metadata"`
+	Name      string                 `yaml:"name"`
+	Version   string                 `yaml:"version"`
+	Type      string                 `yaml:"type"` // package, recipe, component
+	Path      string                 `yaml:"path"`
+	Handlers  []string               `yaml:"handlers"`
+	Templates []string               `yaml:"templates"`
+	Routes    []string               `yaml:"routes"`
+	Assets    []string               `yaml:"assets"`
+	Metadata  map[string]interface{} `yaml:"metadata"`
 }
 
 // ComponentRegistry manages package and component registration.

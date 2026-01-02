@@ -3,17 +3,17 @@ package templates
 // Template file paths
 const (
 	// Docker templates
-	TemplateDockerfile       = "project/docker/Dockerfile.tmpl"
-	TemplateDockerCompose    = "project/docker/docker-compose.yml.tmpl"
-	TemplateDockerIgnore     = "project/docker/dockerignore.tmpl"
-	
+	TemplateDockerfile    = "project/docker/Dockerfile.tmpl"
+	TemplateDockerCompose = "project/docker/docker-compose.yml.tmpl"
+	TemplateDockerIgnore  = "project/docker/dockerignore.tmpl"
+
 	// Config templates
-	TemplateAirConfig        = "project/config/air.toml.tmpl"
-	TemplateToutaConfig      = "project/config/touta.yaml.tmpl"
-	
+	TemplateAirConfig   = "project/config/air.toml.tmpl"
+	TemplateToutaConfig = "project/config/touta.yaml.tmpl"
+
 	// Code templates
-	TemplateMainGo           = "project/code/main.go.tmpl"
-	TemplateHelloHandler     = "project/code/hello.go.tmpl"
+	TemplateMainGo       = "project/code/main.go.tmpl"
+	TemplateHelloHandler = "project/code/hello.go.tmpl"
 )
 
 // Template mapping for quick reference
