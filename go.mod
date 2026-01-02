@@ -6,7 +6,7 @@ require (
 	github.com/adrg/frontmatter v0.2.0
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/spf13/cobra v1.10.2
-	github.com/toutaio/toutago-scela-bus v0.1.0
+	github.com/toutaio/toutago-scela-bus v1.0.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
