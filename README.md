@@ -2,7 +2,7 @@
 
 A message-driven Go web framework emphasizing interface-first design, dependency injection, and developer experience.
 
-> **Version 2.0**: Now built on production-ready, standalone component libraries!
+> **Version 0.2.0**: Now built on production-ready, standalone component libraries!
 
 ## Features
 
@@ -22,7 +22,7 @@ Toutā v2.0 has been refactored to use specialized, production-ready component l
 
 ```
 ┌─────────────────────────────────────────────────┐
-│           Toutā Framework (v2.0)                │
+│           Toutā Framework (v0.2.0)                │
 │                                                 │
 │  ┌──────────────────────────────────────────┐  │
 │  │    Integration Layer (Adapters)          │  │
