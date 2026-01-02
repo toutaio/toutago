@@ -5,6 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-01-02
+
+### BREAKING CHANGES
+
+**The main framework now uses production-ready component libraries instead of internal implementations.**
+
+- **Removed** `internal/di/container.go` - replaced by `toutago-nasc-dependency-injector`
+- **Removed** `internal/router/chi_router.go` - replaced by `toutago-cosan-router`
+- **Removed** `internal/template/html_renderer.go` - replaced by `toutago-fith-renderer`
+
+### Added
+
+- **Integration Layer** - New `pkg/touta/integration` package with adapters for component libraries
+  - `NascContainerAdapter` - Adapts nasc.Nasc to touta.Container interface
+  - `CosanRouterAdapter` - Adapts cosan.Router to touta.Router interface
+  - `FithRendererAdapter` - Adapts fith.Engine to touta.TemplateRenderer interface
+  - `NewDataMapper()` - Factory for creating datamapper instances
+  - `NewMigrator()` - Factory for creating database migrators
+
+- **Component Dependencies**:
+  - `github.com/toutaio/toutago-nasc-dependency-injector` v1.0.9 - DI container
+  - `github.com/toutaio/toutago-cosan-router` v1.0.5 - HTTP router
+  - `github.com/toutaio/toutago-fith-renderer` v1.0.6 - Template engine
+  - `github.com/toutaio/toutago-datamapper` v1.0.8 - Database abstraction
+  - `github.com/toutaio/toutago-sil-migrator` v1.0.5 - Migration tool
+
+- **Examples**:
+  - `examples/basic/` - Basic server with DI and routing
+  - `examples/with-templates/` - Template rendering example
+
+- **Comprehensive Integration Tests** - All adapters have test coverage
+
+### Changed
+
+- Framework architecture now demonstrates pluggable component design
+- Reduced main framework LOC by ~500+ lines
+- Improved separation of concerns via adapter pattern
+- Component libraries can now be used standalone in any Go project
+
+### Migration Guide
+
+**Before (v0.1.x):**
+```go
+import "github.com/toutaio/toutago/internal/di"
+import "github.com/toutaio/toutago/internal/router"
+
+container := di.NewContainer()
+router := router.NewChiRouter(container)
+```
+
+**After (v0.2.0):**
+```go
+import "github.com/toutaio/toutago/pkg/touta/integration"
+
+container := integration.NewContainer()
+router := integration.NewRouter(container)
+```
+
+### Benefits
+
+- **Best-in-class components**: Each library is mature, tested (80%+ coverage), production-ready
+- **Flexibility**: Easy to swap implementations via interfaces
+- **Ecosystem**: Components work standalone in any Go project
+- **SOLID principles**: Clear separation of concerns
+- **Reduced complexity**: Less code to maintain in the main framework
+
 ## [0.1.0] - 2024-12-21
 
 ### Added

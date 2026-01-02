@@ -2,15 +2,57 @@
 
 A message-driven Go web framework emphasizing interface-first design, dependency injection, and developer experience.
 
+> **Version 2.0**: Now built on production-ready, standalone component libraries!
+
 ## Features
 
-✅ **Dependency Injection Container** - Interface-based DI with auto-wiring and singleton support  
+✅ **Dependency Injection Container** - Powered by [toutago-nasc-dependency-injector](https://github.com/toutaio/toutago-nasc-dependency-injector)  
+✅ **HTTP Router** - Powered by [toutago-cosan-router](https://github.com/toutaio/toutago-cosan-router) with path parameters and middleware  
+✅ **Template Engine** - Powered by [toutago-fith-renderer](https://github.com/toutaio/toutago-fith-renderer) with Jinja2-style syntax  
+✅ **Data Mapping** - Powered by [toutago-datamapper](https://github.com/toutaio/toutago-datamapper) with pluggable database adapters  
+✅ **Database Migrations** - Powered by [toutago-sil-migrator](https://github.com/toutaio/toutago-sil-migrator)  
 ✅ **Message Bus** - Pub/sub system for message-based communication  
-✅ **Router Abstraction** - HTTP router interface with Chi as default implementation  
 ✅ **Configuration System** - YAML frontmatter loader with environment variable support  
 ✅ **CLI Framework** - Cobra-based ogam (commands) for project scaffolding and development  
-✅ **Template Renderer** - HTML template wrapper with custom function support  
 ✅ **Component Registry** - Nemeton (package) manifest parsing and component registration  
+
+## Component Architecture
+
+Toutā v2.0 has been refactored to use specialized, production-ready component libraries:
+
+```
+┌─────────────────────────────────────────────────┐
+│           Toutā Framework (v2.0)                │
+│                                                 │
+│  ┌──────────────────────────────────────────┐  │
+│  │    Integration Layer (Adapters)          │  │
+│  └───┬──────┬──────┬─────────┬──────────────┘  │
+│      │      │      │         │                  │
+└──────┼──────┼──────┼─────────┼──────────────────┘
+       │      │      │         │
+   ┌───┴──┐ ┌─┴───┐ ┌┴─────┐  ┌┴──────────┐
+   │ nasc │ │cosan│ │ fith │  │datamapper │
+   │  DI  │ │HTTP │ │Tmpl  │  │  + sil    │
+   └──────┘ └─────┘ └──────┘  └───────────┘
+```
+
+### Why This Architecture?
+
+- **Best-in-class components**: Each library is mature, well-tested (80%+ coverage), and production-ready
+- **Flexibility**: Swap implementations easily via interfaces
+- **Reduced complexity**: ~500+ lines removed from the main framework
+- **Ecosystem**: Components can be used standalone in any Go project
+- **SOLID principles**: Clear separation of concerns and responsibilities
+
+### Component Libraries
+
+| Component | Purpose | Repository |
+|-----------|---------|------------|
+| **nasc** | Dependency injection container | [toutago-nasc-dependency-injector](https://github.com/toutaio/toutago-nasc-dependency-injector) |
+| **cosan** | HTTP router with middleware | [toutago-cosan-router](https://github.com/toutaio/toutago-cosan-router) |
+| **fith** | Template engine (Jinja2-style) | [toutago-fith-renderer](https://github.com/toutaio/toutago-fith-renderer) |
+| **datamapper** | Database abstraction layer | [toutago-datamapper](https://github.com/toutaio/toutago-datamapper) |
+| **sil** | Database migration tool | [toutago-sil-migrator](https://github.com/toutaio/toutago-sil-migrator) |
 
 ## Quick Start
 
@@ -160,18 +202,23 @@ bus.Publish(ctx, &UserRegistered{
 
 ### Dependency Injection
 
-All components use interface-based dependency injection:
+Using the nasc-powered container with integrated components:
 
 ```go
+import "github.com/toutaio/toutago/pkg/touta/integration"
+
+// Create container
+container := integration.NewContainer()
+
 // Bind an interface to an implementation
-container.Bind((*StorageAdapter)(nil), &FileStorage{})
+container.Bind((*Logger)(nil), &ConsoleLogger{})
 
 // Resolve dependencies
-storage, _ := container.Make(reflect.TypeOf((*StorageAdapter)(nil)))
+logger, _ := container.Make((*Logger)(nil))
 
 // Auto-wire into structs
 type MyHandler struct {
-    Storage StorageAdapter `inject:""`
+    Logger Logger `inject:""`
 }
 handler := &MyHandler{}
 container.AutoWire(handler)
@@ -179,11 +226,13 @@ container.AutoWire(handler)
 
 ### HTTP Router
 
-Clean router abstraction with Chi underneath:
+Using the cosan-powered router with integrated DI:
 
 ```go
-router := router.NewChiRouter(container)
+// Create router with container
+router := integration.NewRouter(container)
 
+// Register routes
 router.GET("/", func(ctx touta.Context) error {
     return ctx.HTML(200, "<h1>Hello World</h1>")
 })
@@ -192,7 +241,39 @@ router.POST("/users", func(ctx touta.Context) error {
     return ctx.JSON(201, map[string]string{"status": "created"})
 })
 
+// Add middleware
+router.Use(func(next touta.HandlerFunc) touta.HandlerFunc {
+    return func(ctx touta.Context) error {
+        // Middleware logic
+        return next(ctx)
+    }
+})
+
 router.Listen(":8080")
+```
+
+### Template Rendering
+
+Using the fith template engine:
+
+```go
+import "github.com/toutaio/toutago-fith-renderer"
+
+// Create renderer
+renderer, _ := integration.NewTemplateRenderer(&fith.Config{
+    TemplateDir: "templates",
+    Extensions:  []string{".html"},
+})
+
+// Use in routes
+router.GET("/", func(ctx touta.Context) error {
+    data := map[string]interface{}{
+        "Title": "Welcome",
+        "User":  user,
+    }
+    output, _ := renderer.Render("home", data)
+    return ctx.HTML(200, string(output))
+})
 ```
 
 ## CLI Commands (Commands)
