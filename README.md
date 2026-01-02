@@ -173,31 +173,50 @@ router:
 
 ## Core Concepts
 
-### Message Bus
+### Message Bus (Scéla)
 
-Messages flow through the system via a pub/sub bus:
+Event-driven communication using the Scéla message bus:
 
 ```go
-// Define a message
-type UserRegistered struct {
-    message.BaseMessage
-    Email    string
-    Username string
-}
+import (
+    "context"
+    "github.com/toutaio/toutago-scela-bus/pkg/scela"
+    "github.com/toutaio/toutago/pkg/touta/integration"
+)
 
-// Create a handler
-type UserHandler struct{}
+// Create message bus
+bus := integration.NewScelaBus()
+defer bus.Close()
 
-func (h *UserHandler) Handle(ctx context.Context, msg touta.Message) (touta.Message, error) {
-    // Process the message
-    return nil, nil
-}
+// Subscribe to events
+bus.Subscribe("user.*", scela.HandlerFunc(
+    func(ctx context.Context, msg scela.Message) error {
+        // Handle user events
+        data := msg.Payload().(UserData)
+        log.Printf("User event: %s - %v", msg.Topic(), data)
+        return nil
+    },
+))
 
-// Subscribe and publish
-bus.Subscribe("user.registered", &UserHandler{})
-bus.Publish(ctx, &UserRegistered{
+// Publish events
+ctx := context.Background()
+bus.Publish(ctx, "user.created", UserData{
     Email: "user@example.com",
     Username: "john",
+})
+```
+
+**Features:**
+- Sync & async publishing
+- Pattern matching (`user.*`, `*.created`)
+- Middleware support
+- Dead letter queue
+- Retry logic
+- Metrics hooks
+
+**See:** [Scéla Documentation](https://github.com/toutaio/toutago-scela-bus)
+
+### Dependency Injection (Nasc)
 })
 ```
 
