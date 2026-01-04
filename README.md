@@ -392,6 +392,21 @@ go test ./internal/message -v
 go test ./internal/router -v
 ```
 
+Run benchmarks:
+
+```bash
+go test ./pkg/touta/integration -bench=. -benchmem
+```
+
+See [BENCHMARKS.md](docs/BENCHMARKS.md) for detailed performance metrics.
+
+## Documentation
+
+- **[Router Patterns Guide](docs/ROUTER_PATTERNS.md)** - Advanced routing patterns and best practices
+- **[Performance Benchmarks](docs/BENCHMARKS.md)** - Router performance metrics and optimization tips
+- **[Architecture](docs/architecture.md)** - Framework architecture and design decisions
+- **[Message Bus Guide](docs/message-bus.md)** - Scéla event bus usage and patterns
+
 ## Architecture
 
 Toutā follows these principles:
