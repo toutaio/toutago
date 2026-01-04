@@ -2,7 +2,7 @@
 
 A message-driven Go web framework emphasizing interface-first design, dependency injection, and developer experience.
 
-> **Version 0.2.0**: Now built on production-ready, standalone component libraries!
+> **Version 0.3.0**: Now featuring the powerful Scéla message bus with advanced event-driven capabilities!
 
 ## Features
 
