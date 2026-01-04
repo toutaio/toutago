@@ -219,7 +219,7 @@ type HTTPHandlerFunc func(Context) error
 type MiddlewareFunc func(HTTPHandlerFunc) HTTPHandlerFunc
 
 // Router provides HTTP routing abstraction.
-// The default implementation uses Chi, but other routers can be swapped in.
+// The default implementation uses Cosan, but other routers can be swapped in.
 type Router interface {
 	// GET registers a handler for GET requests
 	GET(path string, handler HTTPHandlerFunc)
@@ -235,6 +235,12 @@ type Router interface {
 
 	// PATCH registers a handler for PATCH requests
 	PATCH(path string, handler HTTPHandlerFunc)
+
+	// OPTIONS registers a handler for OPTIONS requests
+	OPTIONS(path string, handler HTTPHandlerFunc)
+
+	// HEAD registers a handler for HEAD requests
+	HEAD(path string, handler HTTPHandlerFunc)
 
 	// Group creates a route group with a prefix
 	Group(prefix string) Router
@@ -260,8 +266,20 @@ type Context interface {
 	// Param retrieves a URL parameter by name
 	Param(key string) string
 
+	// Params returns all URL parameters as a map
+	Params() map[string]string
+
 	// Query retrieves a query string parameter
 	Query(key string) string
+
+	// QueryAll retrieves all values for a query string parameter
+	QueryAll(key string) []string
+
+	// Bind parses the request body into the provided struct
+	Bind(v interface{}) error
+
+	// BodyBytes returns the raw request body as bytes
+	BodyBytes() ([]byte, error)
 
 	// Get retrieves a value from the context
 	Get(key string) interface{}
@@ -281,11 +299,23 @@ type Context interface {
 	// HTML sends an HTML response
 	HTML(status int, html string) error
 
+	// Render renders a template with the given data (uses Fith if available)
+	Render(template string, data interface{}) error
+
 	// Redirect redirects to another URL
 	Redirect(status int, url string) error
 
 	// Status sets the response status code
 	Status(status int) Context
+
+	// Header returns the response header map
+	Header() http.Header
+
+	// Write writes the response body bytes
+	Write([]byte) (int, error)
+
+	// Publish publishes a message to the event bus (uses Scéla if available)
+	Publish(topic string, payload interface{}) error
 }
 
 // ============================================================================

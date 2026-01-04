@@ -46,6 +46,16 @@ func (a *CosanRouterAdapter) PATCH(path string, handler touta.HTTPHandlerFunc) {
 	a.router.PATCH(path, a.adaptHandler(handler))
 }
 
+// OPTIONS registers a handler for OPTIONS requests.
+func (a *CosanRouterAdapter) OPTIONS(path string, handler touta.HTTPHandlerFunc) {
+	a.router.OPTIONS(path, a.adaptHandler(handler))
+}
+
+// HEAD registers a handler for HEAD requests.
+func (a *CosanRouterAdapter) HEAD(path string, handler touta.HTTPHandlerFunc) {
+	a.router.HEAD(path, a.adaptHandler(handler))
+}
+
 // Group creates a route group with a prefix.
 func (a *CosanRouterAdapter) Group(prefix string) touta.Router {
 	return &CosanRouterAdapter{
@@ -168,4 +178,75 @@ func (a *CosanContextAdapter) Redirect(status int, url string) error {
 func (a *CosanContextAdapter) Status(status int) touta.Context {
 	a.ctx.Status(status)
 	return a
+}
+
+// Params returns all URL parameters as a map.
+func (a *CosanContextAdapter) Params() map[string]string {
+	return a.ctx.Params()
+}
+
+// QueryAll retrieves all values for a query string parameter.
+func (a *CosanContextAdapter) QueryAll(key string) []string {
+	return a.ctx.QueryAll(key)
+}
+
+// Bind parses the request body into the provided struct.
+func (a *CosanContextAdapter) Bind(v interface{}) error {
+	return a.ctx.Bind(v)
+}
+
+// BodyBytes returns the raw request body as bytes.
+func (a *CosanContextAdapter) BodyBytes() ([]byte, error) {
+	return a.ctx.BodyBytes()
+}
+
+// Header returns the response header map.
+func (a *CosanContextAdapter) Header() http.Header {
+	return a.ctx.Header()
+}
+
+// Write writes the response body bytes.
+func (a *CosanContextAdapter) Write(b []byte) (int, error) {
+	return a.ctx.Write(b)
+}
+
+// Render renders a template with the given data.
+// This method provides integration with Fith renderer if available in the container.
+func (a *CosanContextAdapter) Render(template string, data interface{}) error {
+	// Try to get renderer from container
+	if a.container != nil {
+		if a.container.Has((*touta.TemplateRenderer)(nil)) {
+			rendererInterface, err := a.container.Make((*touta.TemplateRenderer)(nil))
+			if err == nil && rendererInterface != nil {
+				if renderer, ok := rendererInterface.(touta.TemplateRenderer); ok && renderer != nil {
+					rendered, err := renderer.Render(template, data)
+					if err != nil {
+						return err
+					}
+					return a.HTML(200, string(rendered))
+				}
+			}
+		}
+	}
+	// No renderer available
+	return a.HTML(500, "Template renderer not configured")
+}
+
+// Publish publishes a message to the event bus.
+// This method provides integration with Scéla bus if available in the container.
+func (a *CosanContextAdapter) Publish(topic string, payload interface{}) error {
+	// Try to get bus from container
+	if a.container != nil && a.container.Has((*touta.Bus)(nil)) {
+		busInterface, err := a.container.Make((*touta.Bus)(nil))
+		if err == nil {
+			if bus, ok := busInterface.(touta.Bus); ok {
+				// Check if it's a pointer and not nil
+				if bus != nil {
+					return bus.Publish(a.Request().Context(), topic, payload)
+				}
+			}
+		}
+	}
+	// No bus available - silently ignore
+	return nil
 }
