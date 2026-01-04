@@ -175,12 +175,12 @@ router:
 
 ### Message Bus (Scéla)
 
-Event-driven communication using the Scéla message bus:
+Event-driven communication using the Scéla message bus integrated with Toutā interfaces:
 
 ```go
 import (
     "context"
-    "github.com/toutaio/toutago-scela-bus/pkg/scela"
+    "github.com/toutaio/toutago/pkg/touta"
     "github.com/toutaio/toutago/pkg/touta/integration"
 )
 
@@ -188,39 +188,64 @@ import (
 bus := integration.NewScelaBus()
 defer bus.Close()
 
-// Subscribe to events
-bus.Subscribe("user.*", scela.HandlerFunc(
-    func(ctx context.Context, msg scela.Message) error {
-        // Handle user events
-        data := msg.Payload().(UserData)
-        log.Printf("User event: %s - %v", msg.Topic(), data)
+// Subscribe to events with pattern matching
+bus.Subscribe("user.*", touta.HandlerFunc(
+    func(ctx context.Context, msg touta.Message) error {
+        // Handle all user events
+        log.Printf("User event: %s - %v", msg.Topic(), msg.Payload())
         return nil
     },
 ))
 
-// Publish events
+// Subscribe to specific events
+bus.Subscribe("user.created", touta.HandlerFunc(
+    func(ctx context.Context, msg touta.Message) error {
+        data := msg.Payload().(map[string]interface{})
+        // Send welcome email, create profile, etc.
+        return nil
+    },
+))
+
+// Publish events (async)
 ctx := context.Background()
-bus.Publish(ctx, "user.created", UserData{
-    Email: "user@example.com",
-    Username: "john",
+bus.Publish(ctx, "user.created", map[string]interface{}{
+    "id":    "123",
+    "email": "user@example.com",
+    "name":  "John Doe",
 })
+
+// Publish events synchronously (wait for handlers)
+bus.PublishSync(ctx, "order.completed", orderData)
 ```
 
 **Features:**
-- Sync & async publishing
-- Pattern matching (`user.*`, `*.created`)
-- Middleware support
-- Dead letter queue
-- Retry logic
-- Metrics hooks
+- **Async & sync publishing** - Fire-and-forget or wait for completion
+- **Pattern matching** - Subscribe to `user.*`, `*.created`, `app.**`
+- **Middleware support** - Logging, validation, retry logic
+- **Priority levels** - High-priority messages processed first
+- **Dead letter queue** - Handle failed messages gracefully
+- **Persistence** - Optional Redis or filesystem backing
+- **Metrics hooks** - Monitor message flow and performance
 
-**See:** [Scéla Documentation](https://github.com/toutaio/toutago-scela-bus)
+**Advanced Usage:**
+```go
+// Add global middleware
+bus := integration.NewScelaBusWithMiddleware(
+    LoggingMiddleware,
+    MetricsMiddleware,
+)
 
-### Dependency Injection (Nasc)
-})
+// Publish with priority
+bus.PublishWithPriority(ctx, "alert.critical", alertData, scela.PriorityHigh)
+
+// Handler-specific middleware
+handler := ValidationMiddleware(AuthMiddleware(actualHandler))
+bus.Subscribe("payment.*", handler)
 ```
 
-### Dependency Injection
+**See:** [Scéla Documentation](https://github.com/toutaio/toutago-scela-bus) | [Message Bus Guide](docs/message-bus.md) | [Examples](examples/with-scela/)
+
+### Dependency Injection (Nasc)
 
 Using the nasc-powered container with integrated components:
 

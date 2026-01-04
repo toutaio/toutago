@@ -63,34 +63,49 @@ handler := &Handler{}
 container.AutoWire(handler)
 ```
 
-### MessageBus (Pub/Sub)
+### Message Bus (Pub/Sub with Scéla)
 ```go
-bus := message.NewBus()
-bus.Start(context.Background())
+import (
+    "context"
+    "github.com/toutaio/toutago/pkg/touta"
+    "github.com/toutaio/toutago/pkg/touta/integration"
+)
 
-// Define a message
-type UserCreated struct {
-    message.BaseMessage
-    UserID string
-    Email  string
-}
+// Create bus
+bus := integration.NewScelaBus()
+defer bus.Close()
 
-// Subscribe
-handler := &MyHandler{}
-bus.Subscribe("user.created", handler)
-
-// Publish async
-bus.Publish(ctx, &UserCreated{
-    BaseMessage: message.BaseMessage{
-        MessageSlug: "user.created",
-        MessageType: "event",
+// Subscribe to events with pattern matching
+bus.Subscribe("user.*", touta.HandlerFunc(
+    func(ctx context.Context, msg touta.Message) error {
+        log.Printf("User event: %s", msg.Topic())
+        return nil
     },
-    UserID: "123",
-    Email:  "user@example.com",
+))
+
+// Subscribe to specific events
+bus.Subscribe("user.created", touta.HandlerFunc(
+    func(ctx context.Context, msg touta.Message) error {
+        data := msg.Payload().(map[string]interface{})
+        // Handle user creation
+        return nil
+    },
+))
+
+// Publish async (non-blocking)
+bus.Publish(ctx, "user.created", map[string]interface{}{
+    "id":    "123",
+    "email": "user@example.com",
 })
 
 // Publish sync (wait for handlers)
-bus.PublishSync(ctx, msg)
+bus.PublishSync(ctx, "order.completed", orderData)
+
+// Publish with priority
+bus.PublishWithPriority(ctx, "alert.critical", alertData, scela.PriorityHigh)
+
+// Add middleware
+bus.Use(LoggingMiddleware, ValidationMiddleware)
 ```
 
 ### Router (HTTP)
@@ -240,15 +255,22 @@ func TestHandler(t *testing.T) {
 
 // Message Bus
 func TestMessage(t *testing.T) {
-    bus := message.NewBus()
-    bus.Start(context.Background())
-    defer bus.Stop(context.Background())
+    bus := integration.NewScelaBus()
+    defer bus.Close()
     
-    handler := &TestHandler{}
-    bus.Subscribe("test", handler)
-    bus.PublishSync(context.Background(), msg)
+    var received bool
+    handler := touta.HandlerFunc(func(ctx context.Context, msg touta.Message) error {
+        received = true
+        return nil
+    })
+    
+    bus.Subscribe("test.event", handler)
+    bus.PublishSync(context.Background(), "test.event", map[string]interface{}{
+        "data": "test",
+    })
     
     // Assert handler was called
+    assert.True(t, received)
 }
 
 // HTTP Router
@@ -289,16 +311,20 @@ func (h *UserHandler) Handle(ctx context.Context, msg touta.Message) (touta.Mess
 }
 ```
 
-### HTTP Handler with Message
+### HTTP Handler with Message Bus
 ```go
 router.POST("/users", func(ctx touta.Context) error {
-    // Get dependencies from container
-    bus, _ := ctx.Container().Make(reflect.TypeOf((*touta.MessageBus)(nil)))
+    // Get bus from container
+    bus, _ := ctx.Container().Make((*touta.Bus)(nil))
     
-    // Publish message
-    bus.(touta.MessageBus).Publish(
+    // Publish event
+    bus.(*integration.ScelaBus).Publish(
         ctx.Request().Context(),
-        &UserCreated{UserID: "123"},
+        "user.created",
+        map[string]interface{}{
+            "id":    "123",
+            "email": "user@example.com",
+        },
     )
     
     return ctx.JSON(201, map[string]string{"status": "created"})

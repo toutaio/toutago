@@ -5,6 +5,124 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-01-04
+
+### BREAKING CHANGES
+
+**Complete integration of Scéla message bus with new interface design.**
+
+- **Removed** `internal/message/` - Old internal message bus implementation completely removed
+- **Changed** Message interfaces - Updated to align with Scéla's API design
+  - `Message.Topic()` replaces `Message.Slug()` and `Message.Type()`
+  - `Handler.Handle(ctx, msg)` returns `error` only (no response message)
+  - `Bus.Subscribe()` returns `Subscription` instead of `error` only
+  - `Bus.Close()` replaces `Bus.Start()` and `Bus.Stop()`
+
+### Added
+
+- **Scéla Message Bus Integration**:
+  - `github.com/toutaio/toutago-scela-bus` v1.4.0 - Production-ready message bus
+  - `integration.NewScelaBus()` - Factory for creating Scéla bus instances
+  - `integration.NewScelaBusWithMiddleware()` - Factory with global middleware
+  - `ScelaBus.PublishSync()` - Synchronous message publishing
+  - `ScelaBus.PublishWithPriority()` - Priority message publishing
+  - `ScelaBus.Use()` - Add middleware to the bus
+  - Pattern matching support (`user.*`, `app.**`)
+  - Priority message processing (Low, Normal, High, Urgent)
+  - Optional persistence (Redis, Filesystem)
+  - Dead letter queue support
+  - Retry logic with exponential backoff
+
+- **Documentation**:
+  - `docs/message-bus.md` - Comprehensive message bus guide
+  - `examples/with-scela/README.md` - Detailed Scéla example documentation
+  - Enhanced README with Scéla usage examples
+  - Updated QUICKSTART with modern message bus patterns
+
+- **Examples**:
+  - Enhanced `examples/with-scela/` with middleware, patterns, and priorities
+  - Added `examples/basic/` message bus integration
+  - Comprehensive integration test suite
+
+### Changed
+
+- **Simplified Scéla Adapter** - More direct exposure of Scéla features
+- **Updated all examples** - Now use Scéla bus instead of old internal bus
+- **Improved integration layer** - Better separation of concerns
+
+### Removed
+
+- `internal/message/bus.go` - Replaced by Scéla integration
+- `internal/message/` directory - No longer needed
+- Old `BaseMessage` type - Use Scéla's Message interface
+- Legacy message bus interfaces - Replaced with Scéla-aligned design
+
+### Migration Guide
+
+**Message Publishing - Before (v0.2.x):**
+```go
+import "github.com/toutaio/toutago/internal/message"
+
+bus := message.NewBus()
+bus.Start(context.Background())
+
+bus.Publish(ctx, &UserCreated{
+    BaseMessage: message.BaseMessage{
+        MessageSlug: "user.created",
+        MessageType: "event",
+    },
+    UserID: "123",
+})
+```
+
+**After (v0.3.0):**
+```go
+import "github.com/toutaio/toutago/pkg/touta/integration"
+
+bus := integration.NewScelaBus()
+defer bus.Close()
+
+bus.Publish(ctx, "user.created", map[string]interface{}{
+    "id": "123",
+})
+```
+
+**Message Subscription - Before:**
+```go
+type MyHandler struct{}
+
+func (h *MyHandler) Handle(ctx context.Context, msg touta.Message) (touta.Message, error) {
+    // Handle message
+    return nil, nil
+}
+
+bus.Subscribe("user.created", &MyHandler{})
+```
+
+**After:**
+```go
+bus.Subscribe("user.created", touta.HandlerFunc(
+    func(ctx context.Context, msg touta.Message) error {
+        // Handle message
+        return nil
+    },
+))
+```
+
+### Benefits
+
+- **Production-ready** - Built on battle-tested Scéla bus (80%+ test coverage)
+- **Feature-rich** - Pattern matching, priorities, persistence, middleware
+- **Simpler API** - More intuitive interface design
+- **Better performance** - Optimized worker pool and message queue
+- **Flexible** - Easy to configure for different use cases
+
+### See Also
+
+- [Scéla Bus Repository](https://github.com/toutaio/toutago-scela-bus)
+- [Message Bus Guide](docs/message-bus.md)
+- [Examples](examples/with-scela/)
+
 ## [0.2.0] - 2026-01-02
 
 ### BREAKING CHANGES
