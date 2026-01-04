@@ -417,7 +417,7 @@ Toutā follows these principles:
 - [x] Core interfaces defined
 - [x] DI container implementation  
 - [x] Message bus implementation
-- [x] Router abstraction (Chi)
+- [x] Router abstraction (Cosan)
 - [x] Configuration system
 - [x] CLI framework
 - [x] Template renderer

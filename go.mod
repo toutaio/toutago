@@ -4,7 +4,6 @@ go 1.22.9
 
 require (
 	github.com/adrg/frontmatter v0.2.0
-	github.com/go-chi/chi/v5 v5.0.10
 	github.com/spf13/cobra v1.10.2
 	github.com/toutaio/toutago-cosan-router v1.0.5
 	github.com/toutaio/toutago-datamapper v1.0.8

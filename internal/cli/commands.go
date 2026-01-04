@@ -133,11 +133,11 @@ func initGoModule(dir string) error {
 			return fmt.Errorf("failed to initialize go module: %w\nOutput: %s", err, output)
 		}
 
-		// Add chi router dependency
-		cmd = exec.Command("go", "get", "github.com/go-chi/chi/v5@latest")
+		// Add Toutā ecosystem dependencies (Cosan router is already included in toutago)
+		cmd = exec.Command("go", "get", "github.com/toutaio/toutago@latest")
 		cmd.Dir = dir
 		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("failed to add chi dependency: %w\nOutput: %s", err, output)
+			return fmt.Errorf("failed to add toutago dependency: %w\nOutput: %s", err, output)
 		}
 	}
 	return nil

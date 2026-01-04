@@ -512,31 +512,29 @@ type HandlerFunc func(Context) error
 type MiddlewareFunc func(HandlerFunc) HandlerFunc
 ```
 
-### Default Implementation (Chi)
+### Default Implementation (Cosan)
 
 ```go
-// ChiRouter wraps Chi router
-type ChiRouter struct {
-    mux *chi.Mux
+// CosanRouter wraps Cosan router
+type CosanRouter struct {
+    router cosan.Router
 }
 
-func NewChiRouter() Router {
-    return &ChiRouter{
-        mux: chi.NewRouter(),
+func NewCosanRouter() Router {
+    return &CosanRouter{
+        router: cosan.New(),
     }
 }
 
-func (r *ChiRouter) GET(path string, handler HandlerFunc) {
-    r.mux.Get(path, r.adaptHandler(handler))
+func (r *CosanRouter) GET(path string, handler HandlerFunc) {
+    r.router.GET(path, r.adaptHandler(handler))
 }
 
-// Convert Toutā handler to Chi handler
-func (r *ChiRouter) adaptHandler(h HandlerFunc) http.HandlerFunc {
-    return func(w http.ResponseWriter, req *http.Request) {
-        ctx := NewContext(w, req, r.di)
-        if err := h(ctx); err != nil {
-            // Error handling
-        }
+// Convert Toutā handler to Cosan handler
+func (r *CosanRouter) adaptHandler(h HandlerFunc) cosan.HandlerFunc {
+    return func(ctx cosan.Context) error {
+        toutaCtx := NewContext(ctx, r.di)
+        return h(toutaCtx)
     }
 }
 ```
@@ -544,6 +542,8 @@ func (r *ChiRouter) adaptHandler(h HandlerFunc) http.HandlerFunc {
 ### Alternative Implementations
 
 Users can create implementations for other routers:
+- Cosan (default)
+- Chi
 - Fiber
 - Gin
 - Echo
@@ -553,7 +553,7 @@ Users can create implementations for other routers:
 // In touta.yaml
 framework:
   router:
-    type: chi  # or: fiber, gin, echo, stdlib
+    type: cosan  # or: chi, fiber, gin, echo, stdlib
 ```
 
 ## Dependency Injection Container
