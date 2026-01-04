@@ -218,6 +218,26 @@ type HTTPHandlerFunc func(Context) error
 // MiddlewareFunc wraps an HTTPHandlerFunc to provide cross-cutting concerns.
 type MiddlewareFunc func(HTTPHandlerFunc) HTTPHandlerFunc
 
+// RequestHook is a function that runs before request processing.
+type RequestHook func(req *http.Request) error
+
+// ResponseHook is a function that runs after response is written.
+type ResponseHook func(req *http.Request, statusCode int)
+
+// ErrorHandler is a custom error handling function for the router.
+type ErrorHandler func(ctx Context, err error)
+
+// RouteInfo contains metadata about a registered route.
+type RouteInfo struct {
+	Method      string
+	Pattern     string
+	Name        string
+	Description string
+	Tags        []string
+	Deprecated  bool
+	Version     string
+}
+
 // Router provides HTTP routing abstraction.
 // The default implementation uses Cosan, but other routers can be swapped in.
 type Router interface {
@@ -247,6 +267,21 @@ type Router interface {
 
 	// Use adds middleware to the router
 	Use(middleware ...MiddlewareFunc)
+
+	// BeforeRequest registers a hook to run before each request
+	BeforeRequest(hook RequestHook)
+
+	// AfterResponse registers a hook to run after each response
+	AfterResponse(hook ResponseHook)
+
+	// SetErrorHandler sets a custom error handler for the router
+	SetErrorHandler(handler ErrorHandler)
+
+	// GetRoutes returns all registered routes with metadata
+	GetRoutes() []RouteInfo
+
+	// FindRoute finds a route by name from its metadata
+	FindRoute(name string) *RouteInfo
 
 	// Listen starts the HTTP server on the given address
 	Listen(addr string) error

@@ -82,6 +82,62 @@ func (a *CosanRouterAdapter) Native() interface{} {
 	return a.router
 }
 
+// BeforeRequest registers a hook to run before each request.
+func (a *CosanRouterAdapter) BeforeRequest(hook touta.RequestHook) {
+	a.router.BeforeRequest(cosan.RequestHook(hook))
+}
+
+// AfterResponse registers a hook to run after each response.
+func (a *CosanRouterAdapter) AfterResponse(hook touta.ResponseHook) {
+	a.router.AfterResponse(cosan.ResponseHook(hook))
+}
+
+// SetErrorHandler sets a custom error handler for the router.
+func (a *CosanRouterAdapter) SetErrorHandler(handler touta.ErrorHandler) {
+	a.router.SetErrorHandler(func(ctx cosan.Context, err error) {
+		toutaCtx := &CosanContextAdapter{
+			ctx:       ctx,
+			container: a.container,
+		}
+		handler(toutaCtx, err)
+	})
+}
+
+// GetRoutes returns all registered routes with metadata.
+func (a *CosanRouterAdapter) GetRoutes() []touta.RouteInfo {
+	cosanRoutes := a.router.GetRoutes()
+	routes := make([]touta.RouteInfo, len(cosanRoutes))
+	for i, r := range cosanRoutes {
+		routes[i] = touta.RouteInfo{
+			Method:      r.Method,
+			Pattern:     r.Pattern,
+			Name:        r.Name,
+			Description: r.Description,
+			Tags:        r.Tags,
+			Deprecated:  r.Deprecated,
+			Version:     r.Version,
+		}
+	}
+	return routes
+}
+
+// FindRoute finds a route by name from its metadata.
+func (a *CosanRouterAdapter) FindRoute(name string) *touta.RouteInfo {
+	cosanRoute := a.router.FindRoute(name)
+	if cosanRoute == nil {
+		return nil
+	}
+	return &touta.RouteInfo{
+		Method:      cosanRoute.Method,
+		Pattern:     cosanRoute.Pattern,
+		Name:        cosanRoute.Name,
+		Description: cosanRoute.Description,
+		Tags:        cosanRoute.Tags,
+		Deprecated:  cosanRoute.Deprecated,
+		Version:     cosanRoute.Version,
+	}
+}
+
 // adaptHandler converts a touta.HTTPHandlerFunc to a cosan.HandlerFunc.
 func (a *CosanRouterAdapter) adaptHandler(handler touta.HTTPHandlerFunc) cosan.HandlerFunc {
 	return func(ctx cosan.Context) error {
