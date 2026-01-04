@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -38,6 +39,17 @@ func main() {
 		log.Fatal(err)
 	}
 	
+	// Create and register message bus using Scéla
+	bus := integration.NewScelaWithDefaults()
+	defer bus.Close()
+	
+	err = container.Factory((*touta.Bus)(nil), func(c touta.Container) (interface{}, error) {
+		return bus, nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	
 	// Resolve logger
 	loggerInterface, err := container.Make((*Logger)(nil))
 	if err != nil {
@@ -47,15 +59,36 @@ func main() {
 	
 	logger.Info("Starting application with integrated components...")
 	
+	// Subscribe to application events
+	bus.Subscribe("app.*", touta.HandlerFunc(func(ctx context.Context, msg touta.Message) error {
+		logger.Info(fmt.Sprintf("Event: %s - %v", msg.Topic(), msg.Payload()))
+		return nil
+	}))
+	
+	// Publish application startup event
+	ctx := context.Background()
+	bus.Publish(ctx, "app.started", map[string]interface{}{
+		"version": "2.0.0",
+		"components": []string{"nasc", "cosan", "scela"},
+	})
+	
 	// Create router using cosan
 	router := integration.NewRouter(container)
 	
 	// Register routes
 	router.GET("/", func(ctx touta.Context) error {
 		logger.Info("Handling GET /")
+		
+		// Publish request event
+		bus.Publish(context.Background(), "app.request", map[string]interface{}{
+			"path": "/",
+			"method": "GET",
+		})
+		
 		return ctx.JSON(200, map[string]string{
 			"message": "Welcome to Toutā with integrated components!",
 			"version": "2.0.0",
+			"components": "nasc + cosan + scela",
 		})
 	})
 	
