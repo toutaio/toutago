@@ -22,15 +22,3 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
-
-replace github.com/toutaio/toutago-nasc-dependency-injector => /home/nestor/Proyects/touta-for-go/toutago-nasc-dependency-injector
-
-replace github.com/toutaio/toutago-cosan-router => /home/nestor/Proyects/touta-for-go/toutago-cosan-router
-
-replace github.com/toutaio/toutago-fith-renderer => /home/nestor/Proyects/touta-for-go/toutago-fith-renderer
-
-replace github.com/toutaio/toutago-datamapper => /home/nestor/Proyects/touta-for-go/toutago-datamapper
-
-replace github.com/toutaio/toutago-sil-migrator => /home/nestor/Proyects/touta-for-go/toutago-sil-migrator
-
-replace github.com/toutaio/toutago-scela-bus => /home/nestor/Proyects/touta-for-go/toutago-scela-bus

@@ -68,6 +68,22 @@ func NewScelaWithDefaults() *ScelaBus {
 	)
 }
 
+// NewScelaBusWithMiddleware creates a new Scéla bus with global middleware applied.
+//
+// The middleware will be applied to all handlers registered on the bus.
+//
+// Example:
+//
+//	bus := NewScelaBusWithMiddleware(
+//	    LoggingMiddleware,
+//	    ValidationMiddleware,
+//	)
+func NewScelaBusWithMiddleware(middleware ...touta.Middleware) *ScelaBus {
+	bus := NewScelaBus()
+	bus.Use(middleware...)
+	return bus
+}
+
 // Publish publishes a message asynchronously to all matching subscribers.
 //
 // The message is queued and processed by worker goroutines. This method
