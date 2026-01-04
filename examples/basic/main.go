@@ -66,7 +66,7 @@ func main() {
 	})
 	
 	// Add middleware
-	router.Use(func(next touta.HandlerFunc) touta.HandlerFunc {
+	router.Use(func(next touta.HTTPHandlerFunc) touta.HTTPHandlerFunc {
 		return func(ctx touta.Context) error {
 			logger.Info(fmt.Sprintf("%s %s", ctx.Request().Method, ctx.Request().URL.Path))
 			return next(ctx)

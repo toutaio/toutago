@@ -6,7 +6,7 @@ import (
 "log"
 "net/http"
 
-"github.com/toutaio/toutago-scela-bus/pkg/scela"
+"github.com/toutaio/toutago/pkg/touta"
 "github.com/toutaio/toutago/pkg/touta/integration"
 )
 
@@ -14,7 +14,7 @@ func main() {
 bus := integration.NewScelaBus()
 defer bus.Close()
 
-_, err := bus.Subscribe("user.*", scela.HandlerFunc(func(ctx context.Context, msg scela.Message) error {
+_, err := bus.Subscribe("user.*", touta.HandlerFunc(func(ctx context.Context, msg touta.Message) error {
 fmt.Printf("[EVENT] %s: %v\n", msg.Topic(), msg.Payload())
 return nil
 }))

@@ -39,7 +39,7 @@ func TestChiRouter_Methods(t *testing.T) {
 	container := di.NewContainer()
 	router := NewChiRouter(container)
 
-	methods := map[string]func(string, touta.HandlerFunc){
+	methods := map[string]func(string, touta.HTTPHandlerFunc){
 		"GET":    router.GET,
 		"POST":   router.POST,
 		"PUT":    router.PUT,

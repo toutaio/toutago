@@ -22,27 +22,27 @@ func NewRouter(container touta.Container, options ...cosan.Option) touta.Router 
 }
 
 // GET registers a handler for GET requests.
-func (a *CosanRouterAdapter) GET(path string, handler touta.HandlerFunc) {
+func (a *CosanRouterAdapter) GET(path string, handler touta.HTTPHandlerFunc) {
 	a.router.GET(path, a.adaptHandler(handler))
 }
 
 // POST registers a handler for POST requests.
-func (a *CosanRouterAdapter) POST(path string, handler touta.HandlerFunc) {
+func (a *CosanRouterAdapter) POST(path string, handler touta.HTTPHandlerFunc) {
 	a.router.POST(path, a.adaptHandler(handler))
 }
 
 // PUT registers a handler for PUT requests.
-func (a *CosanRouterAdapter) PUT(path string, handler touta.HandlerFunc) {
+func (a *CosanRouterAdapter) PUT(path string, handler touta.HTTPHandlerFunc) {
 	a.router.PUT(path, a.adaptHandler(handler))
 }
 
 // DELETE registers a handler for DELETE requests.
-func (a *CosanRouterAdapter) DELETE(path string, handler touta.HandlerFunc) {
+func (a *CosanRouterAdapter) DELETE(path string, handler touta.HTTPHandlerFunc) {
 	a.router.DELETE(path, a.adaptHandler(handler))
 }
 
 // PATCH registers a handler for PATCH requests.
-func (a *CosanRouterAdapter) PATCH(path string, handler touta.HandlerFunc) {
+func (a *CosanRouterAdapter) PATCH(path string, handler touta.HTTPHandlerFunc) {
 	a.router.PATCH(path, a.adaptHandler(handler))
 }
 
@@ -72,8 +72,8 @@ func (a *CosanRouterAdapter) Native() interface{} {
 	return a.router
 }
 
-// adaptHandler converts a touta.HandlerFunc to a cosan.HandlerFunc.
-func (a *CosanRouterAdapter) adaptHandler(handler touta.HandlerFunc) cosan.HandlerFunc {
+// adaptHandler converts a touta.HTTPHandlerFunc to a cosan.HandlerFunc.
+func (a *CosanRouterAdapter) adaptHandler(handler touta.HTTPHandlerFunc) cosan.HandlerFunc {
 	return func(ctx cosan.Context) error {
 		toutaCtx := &CosanContextAdapter{
 			ctx:       ctx,

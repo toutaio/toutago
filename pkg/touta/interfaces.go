@@ -10,6 +10,7 @@ package touta
 import (
 	"context"
 	"net/http"
+	"time"
 )
 
 // ============================================================================
@@ -55,77 +56,185 @@ type ServiceProvider interface {
 }
 
 // ============================================================================
-// Message Bus Interfaces
+// Message Bus Interfaces (Scéla Integration)
 // ============================================================================
 
-// Message represents a message that flows through the system.
-// All messages must have a unique slug, type, and optional metadata.
+// Message represents a message that flows through the Scéla message bus.
+//
+// Messages in Toutā use a topic-based routing system with support for
+// wildcard patterns. Topics typically follow a hierarchical structure
+// like "user.registered", "order.created", etc.
+//
+// Example:
+//
+//	type UserRegisteredEvent struct {
+//	    UserID string
+//	    Email  string
+//	}
+//
+//	// Publish the message
+//	bus.Publish(ctx, "user.registered", UserRegisteredEvent{...})
 type Message interface {
-	// Slug returns the unique identifier for this message (e.g., "user.registered")
-	Slug() string
+	// Topic returns the message topic (e.g., "user.registered", "order.created")
+	Topic() string
 
-	// Type returns the message category (e.g., "event", "command", "query")
-	Type() string
+	// Payload returns the message payload data
+	Payload() interface{}
 
 	// Metadata returns additional message metadata
 	Metadata() map[string]interface{}
+
+	// ID returns the unique message identifier
+	ID() string
+
+	// Timestamp returns when the message was created
+	Timestamp() time.Time
 }
 
-// MessageHandler processes incoming messages and optionally returns a response.
-type MessageHandler interface {
-	// Handle processes a message and returns an optional response message
-	Handle(ctx context.Context, msg Message) (Message, error)
+// Handler processes messages from the message bus.
+//
+// Handlers are registered with topic patterns and executed when matching
+// messages are published. Patterns support wildcards:
+//   - "*" matches any single segment (e.g., "user.*" matches "user.created", "user.updated")
+//   - "**" matches any number of segments (e.g., "user.**" matches "user.created.admin")
+//
+// Example:
+//
+//	handler := touta.HandlerFunc(func(ctx context.Context, msg touta.Message) error {
+//	    event := msg.Payload().(UserRegisteredEvent)
+//	    log.Printf("User registered: %s", event.Email)
+//	    return nil
+//	})
+//	bus.Subscribe("user.registered", handler)
+type Handler interface {
+	// Handle processes a message and returns an error if processing fails
+	Handle(ctx context.Context, msg Message) error
 }
 
-// MessageBus coordinates message publishing and subscription.
-// It supports both synchronous and asynchronous message dispatch.
-type MessageBus interface {
-	// Publish sends a message asynchronously to all subscribers
-	Publish(ctx context.Context, msg Message) error
+// HandlerFunc is a function adapter that implements the Handler interface.
+//
+// This allows using plain functions as message handlers without
+// creating a separate type.
+//
+// Example:
+//
+//	bus.Subscribe("user.*", touta.HandlerFunc(func(ctx context.Context, msg touta.Message) error {
+//	    log.Printf("User event: %s", msg.Topic())
+//	    return nil
+//	}))
+type HandlerFunc func(ctx context.Context, msg Message) error
 
-	// PublishSync sends a message synchronously and waits for handlers to complete
-	PublishSync(ctx context.Context, msg Message) error
-
-	// Subscribe registers a handler for messages of a specific type or slug
-	Subscribe(pattern string, handler MessageHandler) error
-
-	// Unsubscribe removes a handler for a specific pattern
-	Unsubscribe(pattern string, handler MessageHandler) error
-
-	// Start begins processing messages (for async bus implementations)
-	Start(ctx context.Context) error
-
-	// Stop gracefully shuts down the message bus
-	Stop(ctx context.Context) error
+// Handle implements the Handler interface.
+func (f HandlerFunc) Handle(ctx context.Context, msg Message) error {
+	return f(ctx, msg)
 }
+
+// Bus is the message bus interface for pub/sub messaging in Toutā.
+//
+// The Bus provides topic-based message routing with support for:
+//   - Asynchronous and synchronous message dispatch
+//   - Pattern-based subscriptions with wildcards
+//   - Middleware for cross-cutting concerns
+//   - Priority-based message handling
+//   - Graceful shutdown
+//
+// Example usage:
+//
+//	// Create a bus with options
+//	bus := integration.NewScelaBus(
+//	    scela.WithWorkers(20),
+//	    scela.WithMaxRetries(3),
+//	)
+//
+//	// Subscribe to messages
+//	bus.Subscribe("user.*", touta.HandlerFunc(func(ctx context.Context, msg touta.Message) error {
+//	    log.Printf("User event: %s", msg.Topic())
+//	    return nil
+//	}))
+//
+//	// Publish messages
+//	bus.Publish(ctx, "user.registered", userData)
+type Bus interface {
+	// Publish publishes a message asynchronously to matching subscribers.
+	// Returns immediately without waiting for handlers to complete.
+	Publish(ctx context.Context, topic string, payload interface{}) error
+
+	// PublishSync publishes a message synchronously, waiting for all handlers to complete.
+	// Returns an error if any handler fails.
+	PublishSync(ctx context.Context, topic string, payload interface{}) error
+
+	// Subscribe registers a handler for messages matching the topic pattern.
+	// Patterns support wildcards: "*" for single segment, "**" for multiple segments.
+	// Returns a Subscription that can be used to unsubscribe later.
+	Subscribe(pattern string, handler Handler) (Subscription, error)
+
+	// Use adds middleware to the bus for cross-cutting concerns.
+	// Middleware is applied to all handlers in the order they are registered.
+	Use(middleware ...Middleware)
+
+	// Close gracefully shuts down the bus, waiting for in-flight messages to complete.
+	Close() error
+}
+
+// Subscription represents a subscription to messages on the bus.
+//
+// Subscriptions can be used to unsubscribe from a topic pattern when
+// the handler is no longer needed.
+type Subscription interface {
+	// Topic returns the subscription pattern
+	Topic() string
+
+	// Unsubscribe removes this subscription from the bus
+	Unsubscribe() error
+}
+
+// Middleware wraps message handlers to provide cross-cutting concerns.
+//
+// Middleware can be used for logging, metrics, retry logic, circuit breaking,
+// rate limiting, and other concerns that apply across multiple handlers.
+//
+// Example:
+//
+//	loggingMiddleware := func(next touta.Handler) touta.Handler {
+//	    return touta.HandlerFunc(func(ctx context.Context, msg touta.Message) error {
+//	        log.Printf("Processing: %s", msg.Topic())
+//	        err := next.Handle(ctx, msg)
+//	        if err != nil {
+//	            log.Printf("Error: %v", err)
+//	        }
+//	        return err
+//	    })
+//	}
+//	bus.Use(loggingMiddleware)
+type Middleware func(Handler) Handler
 
 // ============================================================================
 // Router Interfaces
 // ============================================================================
 
-// HandlerFunc is the signature for HTTP request handlers.
-type HandlerFunc func(Context) error
+// HTTPHandlerFunc is the signature for HTTP request handlers.
+type HTTPHandlerFunc func(Context) error
 
-// MiddlewareFunc wraps a HandlerFunc to provide cross-cutting concerns.
-type MiddlewareFunc func(HandlerFunc) HandlerFunc
+// MiddlewareFunc wraps an HTTPHandlerFunc to provide cross-cutting concerns.
+type MiddlewareFunc func(HTTPHandlerFunc) HTTPHandlerFunc
 
 // Router provides HTTP routing abstraction.
 // The default implementation uses Chi, but other routers can be swapped in.
 type Router interface {
 	// GET registers a handler for GET requests
-	GET(path string, handler HandlerFunc)
+	GET(path string, handler HTTPHandlerFunc)
 
 	// POST registers a handler for POST requests
-	POST(path string, handler HandlerFunc)
+	POST(path string, handler HTTPHandlerFunc)
 
 	// PUT registers a handler for PUT requests
-	PUT(path string, handler HandlerFunc)
+	PUT(path string, handler HTTPHandlerFunc)
 
 	// DELETE registers a handler for DELETE requests
-	DELETE(path string, handler HandlerFunc)
+	DELETE(path string, handler HTTPHandlerFunc)
 
 	// PATCH registers a handler for PATCH requests
-	PATCH(path string, handler HandlerFunc)
+	PATCH(path string, handler HTTPHandlerFunc)
 
 	// Group creates a route group with a prefix
 	Group(prefix string) Router

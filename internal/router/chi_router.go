@@ -25,27 +25,27 @@ func NewChiRouter(container touta.Container) touta.Router {
 }
 
 // GET registers a handler for GET requests.
-func (r *chiRouter) GET(path string, handler touta.HandlerFunc) {
+func (r *chiRouter) GET(path string, handler touta.HTTPHandlerFunc) {
 	r.mux.Get(path, r.adapt(handler))
 }
 
 // POST registers a handler for POST requests.
-func (r *chiRouter) POST(path string, handler touta.HandlerFunc) {
+func (r *chiRouter) POST(path string, handler touta.HTTPHandlerFunc) {
 	r.mux.Post(path, r.adapt(handler))
 }
 
 // PUT registers a handler for PUT requests.
-func (r *chiRouter) PUT(path string, handler touta.HandlerFunc) {
+func (r *chiRouter) PUT(path string, handler touta.HTTPHandlerFunc) {
 	r.mux.Put(path, r.adapt(handler))
 }
 
 // DELETE registers a handler for DELETE requests.
-func (r *chiRouter) DELETE(path string, handler touta.HandlerFunc) {
+func (r *chiRouter) DELETE(path string, handler touta.HTTPHandlerFunc) {
 	r.mux.Delete(path, r.adapt(handler))
 }
 
 // PATCH registers a handler for PATCH requests.
-func (r *chiRouter) PATCH(path string, handler touta.HandlerFunc) {
+func (r *chiRouter) PATCH(path string, handler touta.HTTPHandlerFunc) {
 	r.mux.Patch(path, r.adapt(handler))
 }
 
@@ -83,8 +83,8 @@ func (r *chiRouter) Native() interface{} {
 	return r.mux
 }
 
-// adapt converts a touta.HandlerFunc to http.HandlerFunc.
-func (r *chiRouter) adapt(handler touta.HandlerFunc) http.HandlerFunc {
+// adapt converts a touta.HTTPHandlerFunc to http.HandlerFunc.
+func (r *chiRouter) adapt(handler touta.HTTPHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx := NewContext(w, req, r.container)
 		if err := handler(ctx); err != nil {

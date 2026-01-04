@@ -33,7 +33,7 @@ func TestChiRouter_Middleware(t *testing.T) {
 	router := NewChiRouter(container)
 
 	middlewareCalled := false
-	middleware := func(next touta.HandlerFunc) touta.HandlerFunc {
+	middleware := func(next touta.HTTPHandlerFunc) touta.HTTPHandlerFunc {
 		return func(ctx touta.Context) error {
 			middlewareCalled = true
 			return next(ctx)

@@ -102,7 +102,7 @@ func TestRouterMiddleware(t *testing.T) {
 	handlerCalled := false
 	
 	// Add middleware
-	router.Use(func(next touta.HandlerFunc) touta.HandlerFunc {
+	router.Use(func(next touta.HTTPHandlerFunc) touta.HTTPHandlerFunc {
 		return func(ctx touta.Context) error {
 			middlewareCalled = true
 			return next(ctx)
