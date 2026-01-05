@@ -15,6 +15,7 @@ A message-driven Go web framework emphasizing interface-first design, dependency
 ✅ **Configuration System** - YAML frontmatter loader with environment variable support  
 ✅ **CLI Framework** - Cobra-based ogam (commands) for project scaffolding and development  
 ✅ **Component Registry** - Nemeton (package) manifest parsing and component registration  
+🚧 **Ritual Grove** - Application lifecycle system (integrated plugin) - Powered by [toutago-ritual-grove](https://github.com/toutaio/toutago-ritual-grove)  
 
 ## Component Architecture
 
@@ -54,6 +55,7 @@ Toutā v2.0 has been refactored to use specialized, production-ready component l
 | **datamapper** | Database abstraction layer | [toutago-datamapper](https://github.com/toutaio/toutago-datamapper) |
 | **sil** | Database migration tool | [toutago-sil-migrator](https://github.com/toutaio/toutago-sil-migrator) |
 | **scela** | In-process message bus | [toutago-scela-bus](https://github.com/toutaio/toutago-scela-bus) |
+| **ritual-grove** 🚧 | Application lifecycle/templates | [toutago-ritual-grove](https://github.com/toutaio/toutago-ritual-grove) |
 
 ## Quick Start
 
