@@ -464,6 +464,23 @@ Toutā follows these principles:
 
 **All Phase 1 objectives completed!** 🎉
 
+## Etymology
+
+**Toutā** (pronounced "TOO-tah") comes from Proto-Celtic **\*toutā**, meaning "tribe" or "people." This ancient word is the root of many modern Celtic language words:
+
+- Irish: *tuath* (people, territory, petty kingdom)
+- Welsh: *tud* (country, land)
+- Gaulish: *teuta* (tribe)
+
+The name reflects the framework's philosophy:
+
+- **Community-driven**: Built by and for developers, emphasizing collaboration
+- **Tribal knowledge**: Encoding best practices and patterns into reusable components
+- **Territory**: A cohesive ecosystem where all parts work together harmoniously
+- **Celtic roots**: Honoring the naming tradition of using Irish/Celtic terms (like our components: Nasc, Cosan, Fíth, Scéla)
+
+Just as a *toutā* was a self-sufficient community with defined roles and shared resources, Toutā framework provides a complete, integrated ecosystem for web development in Go.
+
 ## Contributing
 
 Contributions are welcome! Please read our contributing guidelines and code of conduct.
