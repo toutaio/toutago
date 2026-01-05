@@ -61,26 +61,44 @@ Toutā v2.0 has been refactored to use specialized, production-ready component l
 
 ### Installation
 
+The Go way - simple and direct:
+
 ```bash
-# Clone the repository
+# Install directly from source (recommended)
+go install github.com/toutaio/toutago/cmd/touta@latest
+
+# Or clone and install locally for development
 git clone https://github.com/toutaio/toutago
 cd toutago
+go install ./cmd/touta
+```
 
-# Build the CLI
-go build -o touta cmd/touta/main.go
+**Note:** The `touta` binary includes embedded default rituals (project templates), so it works from any installation location without requiring additional setup.
 
-# Make it available globally (optional)
-sudo mv touta /usr/local/bin/
-# Or to the user bin directory
-mv touta ~/go/bin/
+Make sure `$GOPATH/bin` (usually `~/go/bin`) is in your `PATH`:
+```bash
+export PATH="$HOME/go/bin:$PATH"
+```
+
+### Verify Installation
+
+```bash
+# Check version
+touta version
+
+# List available rituals
+touta ritual list
 ```
 
 ### Create Your First Project
 
 ```bash
-# Create a new project
-touta new my-app
-cd my-app
+# Create a new project from a ritual
+touta ritual init minimal
+cd my-project
+
+# Initialize as a Toutā project
+touta init
 
 # Run the application
 go run main.go

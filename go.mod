@@ -9,7 +9,7 @@ require (
 	github.com/toutaio/toutago-datamapper v1.0.8
 	github.com/toutaio/toutago-fith-renderer v1.0.6
 	github.com/toutaio/toutago-nasc-dependency-injector v1.0.9
-	github.com/toutaio/toutago-ritual-grove v0.0.0-20260105021835-ff6292333eef
+	github.com/toutaio/toutago-ritual-grove v0.0.0-20260105031526-f9c93554e9cb
 	github.com/toutaio/toutago-scela-bus v1.5.4
 	github.com/toutaio/toutago-sil-migrator v1.0.5
 	gopkg.in/yaml.v3 v3.0.1
