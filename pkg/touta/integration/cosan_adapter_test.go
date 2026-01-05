@@ -166,3 +166,171 @@ func TestContextMethods(t *testing.T) {
 		t.Fatal("Context was not captured")
 	}
 }
+
+// TestRouterPUT verifies PUT route registration.
+func TestRouterPUT(t *testing.T) {
+	container := integration.NewContainer()
+	router := integration.NewRouter(container)
+	
+	called := false
+	router.PUT("/users/1", func(ctx touta.Context) error {
+		called = true
+		return ctx.JSON(200, map[string]string{"status": "updated"})
+	})
+	
+	req := httptest.NewRequest("PUT", "/users/1", nil)
+	w := httptest.NewRecorder()
+	
+	if nativeRouter, ok := router.Native().(http.Handler); ok {
+		nativeRouter.ServeHTTP(w, req)
+	}
+	
+	if !called {
+		t.Fatal("PUT handler was not called")
+	}
+}
+
+// TestRouterDELETE verifies DELETE route registration.
+func TestRouterDELETE(t *testing.T) {
+	container := integration.NewContainer()
+	router := integration.NewRouter(container)
+	
+	called := false
+	router.DELETE("/users/1", func(ctx touta.Context) error {
+		called = true
+		return ctx.String(204, "")
+	})
+	
+	req := httptest.NewRequest("DELETE", "/users/1", nil)
+	w := httptest.NewRecorder()
+	
+	if nativeRouter, ok := router.Native().(http.Handler); ok {
+		nativeRouter.ServeHTTP(w, req)
+	}
+	
+	if !called {
+		t.Fatal("DELETE handler was not called")
+	}
+}
+
+// TestRouterPATCH verifies PATCH route registration.
+func TestRouterPATCH(t *testing.T) {
+	container := integration.NewContainer()
+	router := integration.NewRouter(container)
+	
+	called := false
+	router.PATCH("/users/1", func(ctx touta.Context) error {
+		called = true
+		return ctx.JSON(200, map[string]string{"status": "patched"})
+	})
+	
+	req := httptest.NewRequest("PATCH", "/users/1", nil)
+	w := httptest.NewRecorder()
+	
+	if nativeRouter, ok := router.Native().(http.Handler); ok {
+		nativeRouter.ServeHTTP(w, req)
+	}
+	
+	if !called {
+		t.Fatal("PATCH handler was not called")
+	}
+}
+
+// TestContextParam verifies parameter extraction.
+func TestContextParam(t *testing.T) {
+	container := integration.NewContainer()
+	router := integration.NewRouter(container)
+	
+	var param string
+	router.GET("/users/:id", func(ctx touta.Context) error {
+		param = ctx.Param("id")
+		return ctx.String(200, "OK")
+	})
+	
+	req := httptest.NewRequest("GET", "/users/123", nil)
+	w := httptest.NewRecorder()
+	
+	if nativeRouter, ok := router.Native().(http.Handler); ok {
+		nativeRouter.ServeHTTP(w, req)
+	}
+	
+	if param != "123" {
+		t.Errorf("Expected param '123', got '%s'", param)
+	}
+}
+
+// TestContextQuery verifies query parameter extraction.
+func TestContextQuery(t *testing.T) {
+	container := integration.NewContainer()
+	router := integration.NewRouter(container)
+	
+	var query string
+	router.GET("/search", func(ctx touta.Context) error {
+		query = ctx.Query("q")
+		return ctx.String(200, "OK")
+	})
+	
+	req := httptest.NewRequest("GET", "/search?q=test", nil)
+	w := httptest.NewRecorder()
+	
+	if nativeRouter, ok := router.Native().(http.Handler); ok {
+		nativeRouter.ServeHTTP(w, req)
+	}
+	
+	if query != "test" {
+		t.Errorf("Expected query 'test', got '%s'", query)
+	}
+}
+
+// TestContextRedirect verifies redirect functionality.
+func TestContextRedirect(t *testing.T) {
+	container := integration.NewContainer()
+	router := integration.NewRouter(container)
+	
+	router.GET("/old", func(ctx touta.Context) error {
+		return ctx.Redirect(302, "/new")
+	})
+	
+	req := httptest.NewRequest("GET", "/old", nil)
+	w := httptest.NewRecorder()
+	
+	if nativeRouter, ok := router.Native().(http.Handler); ok {
+		nativeRouter.ServeHTTP(w, req)
+	}
+	
+	if w.Code != 302 {
+		t.Errorf("Expected status 302, got %d", w.Code)
+	}
+	
+	location := w.Header().Get("Location")
+	if location != "/new" {
+		t.Errorf("Expected location '/new', got '%s'", location)
+	}
+}
+
+// TestContextRequestResponse verifies request/response access.
+func TestContextRequestResponse(t *testing.T) {
+	container := integration.NewContainer()
+	router := integration.NewRouter(container)
+	
+	var hasRequest, hasResponse bool
+	router.GET("/test", func(ctx touta.Context) error {
+		hasRequest = ctx.Request() != nil
+		hasResponse = ctx.Response() != nil
+		return ctx.String(200, "OK")
+	})
+	
+	req := httptest.NewRequest("GET", "/test", nil)
+	w := httptest.NewRecorder()
+	
+	if nativeRouter, ok := router.Native().(http.Handler); ok {
+		nativeRouter.ServeHTTP(w, req)
+	}
+	
+	if !hasRequest {
+		t.Error("Request() returned nil")
+	}
+	if !hasResponse {
+		t.Error("Response() returned nil")
+	}
+}

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Comprehensive test coverage for integration package
+  - Coverage improved from 52.6% to 58.3%
+  - Added tests for PUT, DELETE, PATCH HTTP methods
+  - Added tests for context parameter and query extraction
+  - Added tests for redirect functionality
+  - Added tests for request/response access
+
+### Fixed
+- Fixed missing go.sum entries for spf13/pflag dependency
+
 ## [0.3.0] - 2026-01-04
 
 ### BREAKING CHANGES
