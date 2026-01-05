@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/toutaio/toutago/internal/cli"
+	"github.com/toutaio/toutago/internal/cli/ritual"
 )
 
 var version = "0.1.0"
@@ -26,6 +27,7 @@ func main() {
 	root.AddCommand(cli.InitCommand())
 	root.AddCommand(cli.ServeCommand())
 	root.AddCommand(cli.VersionCommand(version))
+	root.AddCommand(ritual.RitualCommand())
 
 	// TODO: Dynamically load additional commands from plugins
 

@@ -9,15 +9,21 @@ require (
 	github.com/toutaio/toutago-datamapper v1.0.8
 	github.com/toutaio/toutago-fith-renderer v1.0.6
 	github.com/toutaio/toutago-nasc-dependency-injector v1.0.9
+	github.com/toutaio/toutago-ritual-grove v0.0.0-20260105021835-ff6292333eef
 	github.com/toutaio/toutago-scela-bus v1.5.4
 	github.com/toutaio/toutago-sil-migrator v1.0.5
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
+
+replace github.com/toutaio/toutago-ritual-grove => ../toutago-ritual-grove
