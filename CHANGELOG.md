@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Project template now uses PORT environment variable instead of hardcoded port 8080
+
 ### Added
 - Comprehensive test coverage for integration package
   - Coverage improved from 52.6% to 58.3%
